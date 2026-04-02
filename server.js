@@ -1,57 +1,174 @@
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const twilio = require('twilio');
+const nodemailer = require('nodemailer');
+require('dotenv').config();
 
 const app = express();
-const port = 3000;
+const PORT = process.env.PORT || 3000;
+
+// Temporary in-memory OTP storage (phone => { otp, timestamp })
+const otps = {};
+
+// Optional credentials (would normally be in .env)
+const TWILIO_SID = process.env.TWILIO_SID || 'mock_sid';
+const TWILIO_TOKEN = process.env.TWILIO_TOKEN || 'mock_token';
+const TWILIO_PHONE = process.env.TWILIO_PHONE || '+1234567890';
+const twilioClient = TWILIO_SID !== 'mock_sid' ? twilio(TWILIO_SID, TWILIO_TOKEN) : null;
+
+// Use Ethereal for testing Email automatically
+let transporter;
+nodemailer.createTestAccount((err, account) => {
+    if (err) {
+        console.error('Failed to create a testing account. ' + err.message);
+        return process.exit(1);
+    }
+    transporter = nodemailer.createTransport({
+        host: account.smtp.host,
+        port: account.smtp.port,
+        secure: account.smtp.secure,
+        auth: {
+            user: account.user,
+            pass: account.pass
+        }
+    });
+    console.log(`✉️ Automated Nodemailer Ethereal Testing Server is Ready.`);
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Initialize SQLite database
-const db = new sqlite3.Database('./safeping.db', (err) => {
-  if (err) {
-    console.error("Failed to connect to database:", err.message);
-  } else {
-    console.log("Connected to the SQLite database.");
-    // Create tracking table if not exists
-    db.run(`CREATE TABLE IF NOT EXISTS journeys (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      currentLocation TEXT NOT NULL,
-      destination TEXT NOT NULL,
-      vehicleNumber TEXT NOT NULL,
-      driverName TEXT,
-      shareContacts TEXT NOT NULL,
-      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )`);
-  }
-});
+// Serve static frontend files from 'public' directory
+const publicDir = path.join(__dirname, '..', 'public');
+app.use(express.static(publicDir));
 
-// POST endpoint to register a new journey
-app.post('/api/track', (req, res) => {
-  const { name, currentLocation, destination, vehicleNumber, driverName, shareContacts } = req.body;
-  
-  if (!name || !currentLocation || !destination || !vehicleNumber || !shareContacts) {
-    return res.status(400).json({ error: "Missing required fields." });
-  }
+// --- API Routes ---
 
-  const sql = `INSERT INTO journeys (name, currentLocation, destination, vehicleNumber, driverName, shareContacts) VALUES (?, ?, ?, ?, ?, ?)`;
-  const params = [name, currentLocation, destination, vehicleNumber, driverName, shareContacts];
-
-  db.run(sql, params, function(err) {
-    if (err) {
-      console.error("Error inserting data:", err.message);
-      return res.status(500).json({ error: "Failed to register journey." });
+// 1. Chatbot Endpoint Placeholder
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { message, language } = req.body;
+        // In the future, integrate with @google/genai or Google AI Studio here
+        console.log(`Received message in ${language || 'en'}: ${message}`);
+        
+        // Placeholder response
+        res.json({
+            success: true,
+            reply: `You said: "${message}". AI integration is pending.`
+        });
+    } catch (error) {
+        console.error('Chat API Error:', error);
+        res.status(500).json({ success: false, error: 'Internal Server Error' });
     }
-    console.log(`New journey registered for ${name} at ID ${this.lastID}`);
-    res.status(201).json({ message: "Journey successfully registered!", id: this.lastID });
-  });
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`SafePing Backend server running at http://localhost:${port}`);
-  console.log(`Make sure you run "npm install express cors sqlite3" to install required dependencies.`);
+// 2. Authentication
+app.post('/api/auth/signup', (req, res) => {
+    const { name, email, password } = req.body;
+    if (!email || !email.endsWith('@gmail.com')) {
+        return res.status(400).json({ success: false, message: 'Only @gmail.com accounts are permitted.' });
+    }
+    // Simulate successful registration
+    res.json({ success: true, message: 'Signup successful! Redirecting to security checks.' });
+});
+
+app.post('/api/auth/login', (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !email.endsWith('@gmail.com')) {
+        return res.status(400).json({ success: false, message: 'Invalid email provider. Must be @gmail.com' });
+    }
+    // Simulate successful login
+    res.json({ success: true, message: 'Login successful (stub)' });
+});
+
+// 3. Security Mock Endpoints
+app.post('/api/auth/face-check', (req, res) => {
+    // In a real scenario, an image would be passed and processed by an ML model (e.g. AWS Rekognition, Google Cloud Vision)
+    // to verify liveness and gender. We simulate success here.
+    const isFemale = true; // Simulated result
+    if (isFemale) {
+        res.json({ success: true, message: 'Female verified! Identity confirmed.' });
+    } else {
+        res.status(403).json({ success: false, message: 'Authentication failed. Account restricted to women.' });
+    }
+});
+
+app.post('/api/auth/send-otp', async (req, res) => {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ success: false, message: 'Phone required.' });
+
+    // Generate 6-digit OTP
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    otps[phone] = { otp: code, exp: Date.now() + 5 * 60 * 1000 };
+
+    console.log(`\n🔔 [MOCK SMS] To ${phone}: Your SafePing OTP is ${code}\n`);
+
+    if (twilioClient) {
+        try {
+            await twilioClient.messages.create({
+                body: `Your SafePing OTP is ${code}. It expires in 5 minutes.`,
+                from: TWILIO_PHONE,
+                to: phone
+            });
+        } catch (e) {
+            console.error('Twilio Error:', e.message);
+        }
+    }
+    
+    // In prototyping, we pretend it worked successfully even if Twilio isn't set up.
+    // If you're looking at the termial running this, you'll see the [MOCK SMS] printed out!
+    res.json({ success: true, message: 'OTP Sent successfully.', mockOtp: code });
+});
+
+app.post('/api/auth/verify-otp', async (req, res) => {
+    const { phone, otp, email } = req.body;
+
+    if (!otp || otp.length < 6) return res.status(400).json({ success: false, message: 'Invalid OTP format.' });
+    if (!otps[phone] || otps[phone].otp !== otp) {
+        return res.status(400).json({ success: false, message: 'Invalid or expired OTP.' });
+    }
+
+    if (Date.now() > otps[phone].exp) {
+        delete otps[phone];
+        return res.status(400).json({ success: false, message: 'OTP has expired.' });
+    }
+
+    // OTP Correct! Delete it
+    delete otps[phone];
+
+    // Trigger Success Email if email is provided
+    let emailPreview = null;
+    if (email) {
+        if (transporter) {
+            try {
+                let info = await transporter.sendMail({
+                    from: `"SafePing" <safeping@ethereal.email>`,
+                    to: email,
+                    subject: 'Welcome to SafePing — Verification Complete!',
+                    text: 'Your identity and mobile number have been successfully verified. Your SafePing account is active and protecting you.',
+                    html: `<h3>Welcome to SafePing!</h3><p>Your identity and mobile number have been successfully verified. Your account is active and protecting you.</p>`
+                });
+                console.log(`\n📧 [EMAIL DISPATCHED] To ${email}`);
+                emailPreview = nodemailer.getTestMessageUrl(info);
+                console.log(`🔗 Preview your actual sent email here: ${emailPreview}\n`);
+            } catch (e) {
+                console.error('Nodemailer Error:', e.message);
+            }
+        }
+    }
+
+    res.json({ success: true, message: 'Verification fully completed.', emailPreview });
+});
+
+// For any other route, send back index.html (SPA Fallback or generic routing)
+app.get('*', (req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
+});
+
+// Start Server
+app.listen(PORT, () => {
+    console.log(`🚀 SafePing server running on http://localhost:${PORT}`);
 });

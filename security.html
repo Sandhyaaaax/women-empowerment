@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SafePing — Verify Your Identity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; font-family: 'DM Sans', sans-serif; }
+
+body {
+  min-height: 100vh;
+  background: #1a0a14;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 1100px;
+  min-height: 600px;
+  border-radius: 28px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+}
+
+/* ── LEFT PANEL ── */
+.left {
+  background: linear-gradient(145deg, #e8607a 0%, #c0517a 40%, #8b3060 75%, #5a1a3a 100%);
+  padding: 44px 44px 36px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+.left::before {
+  content: '';
+  position: absolute;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  top: -60px; right: -80px;
+}
+.left::after {
+  content: '';
+  position: absolute;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  top: 80px; right: 60px;
+}
+
+.left-logo {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 44px; position: relative; z-index: 2;
+}
+.left-logo-icon {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.left-logo-text {
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem; font-weight: 900;
+  color: white; letter-spacing: -0.02em;
+}
+
+.left-content {
+  position: relative; z-index: 2;
+  flex: 1; display: flex; flex-direction: column;
+}
+
+.step-indicators {
+  display: flex; gap: 10px; margin-bottom: 36px;
+}
+.step-dot {
+  height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,0.25);
+  transition: 0.4s;
+}
+.step-dot.done  { width: 28px; background: rgba(255,255,255,0.9); }
+.step-dot.active{ width: 44px; background: white; }
+.step-dot.upcoming{ width: 20px; }
+
+.left-step-label {
+  font-size: 0.7rem; font-weight: 700;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 10px;
+}
+.left-headline h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 2.4rem; font-weight: 900;
+  line-height: 1.05; letter-spacing: -0.03em;
+  color: white; margin-bottom: 16px;
+}
+.left-headline h2 em { font-style: italic; }
+.left-desc {
+  font-size: 0.86rem;
+  color: rgba(255,255,255,0.7);
+  line-height: 1.75;
+  max-width: 300px;
+  margin-bottom: 36px;
+}
+
+/* face scan illustration */
+.face-illustration {
+  flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 24px;
+}
+.face-ring-wrap {
+  position: relative;
+  width: 180px; height: 180px;
+}
+.face-ring-outer {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,255,255,0.25);
+  animation: spinSlow 12s linear infinite;
+}
+.face-ring-outer::before, .face-ring-outer::after {
+  content: '';
+  position: absolute; width: 10px; height: 10px;
+  border-radius: 50%; background: white;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+.face-ring-outer::before { top: -5px; left: 50%; transform: translateX(-50%); }
+.face-ring-outer::after  { bottom: -5px; right: 20%; }
+
+.face-ring-mid {
+  position: absolute; inset: 16px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  animation: spinSlow 18s linear infinite reverse;
+}
+.face-ring-mid::before {
+  content: '';
+  position: absolute; width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.6);
+  top: 30%; right: -3.5px;
+}
+
+.face-circle {
+  position: absolute; inset: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3.5rem;
+  backdrop-filter: blur(4px);
+}
+
+/* corner brackets */
+.face-corner {
+  position: absolute;
+  width: 18px; height: 18px;
+}
+.face-corner::before, .face-corner::after {
+  content: '';
+  position: absolute;
+  background: white;
+  border-radius: 1px;
+}
+.fc-tl { top: 8px; left: 8px; }
+.fc-tl::before { width: 2px; height: 18px; top: 0; left: 0; }
+.fc-tl::after  { width: 18px; height: 2px; top: 0; left: 0; }
+.fc-tr { top: 8px; right: 8px; }
+.fc-tr::before { width: 2px; height: 18px; top: 0; right: 0; }
+.fc-tr::after  { width: 18px; height: 2px; top: 0; right: 0; }
+.fc-bl { bottom: 8px; left: 8px; }
+.fc-bl::before { width: 2px; height: 18px; bottom: 0; left: 0; }
+.fc-bl::after  { width: 18px; height: 2px; bottom: 0; left: 0; }
+.fc-br { bottom: 8px; right: 8px; }
+.fc-br::before { width: 2px; height: 18px; bottom: 0; right: 0; }
+.fc-br::after  { width: 18px; height: 2px; bottom: 0; right: 0; }
+
+/* scan line animation */
+.scan-line {
+  position: absolute;
+  left: 32px; right: 32px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  border-radius: 1px;
+  animation: scanMove 2.5s ease-in-out infinite;
+  top: 32px;
+  box-shadow: 0 0 8px rgba(255,255,255,0.5);
+}
+@keyframes scanMove {
+  0%   { top: 36px; opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { top: 144px; opacity: 0; }
+}
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+
+.left-stats {
+  display: flex; gap: 0;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 20px;
+}
+.left-stat { flex: 1; text-align: center; }
+.left-stat:not(:last-child) { border-right: 1px solid rgba(255,255,255,0.12); }
+.ls-num {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem; font-weight: 900;
+  color: white; line-height: 1; margin-bottom: 3px;
+}
+.ls-label { font-size: 0.65rem; color: rgba(255,255,255,0.5); font-weight: 500; }
+
+/* ── RIGHT PANEL ── */
+.right {
+  background: white;
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+
+/* step tabs at top */
+.step-tabs {
+  display: flex;
+  border-bottom: 1px solid #f0e8ee;
+}
+.step-tab {
+  flex: 1; padding: 18px 12px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  font-size: 0.78rem; font-weight: 600;
+  color: #c0a0b0;
+  cursor: pointer; transition: 0.25s;
+  border-bottom: 2px solid transparent;
+  background: none; border-top: none; border-left: none; border-right: none;
+  font-family: 'DM Sans', sans-serif;
+  position: relative;
+}
+.step-tab.active {
+  color: #c0517a;
+  border-bottom-color: #c0517a;
+  background: rgba(192,81,122,0.03);
+}
+.step-tab.done {
+  color: #22c55e;
+}
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700;
+  background: #f0e8ee; color: #c0a0b0;
+  transition: 0.25s; flex-shrink: 0;
+}
+.step-tab.active .step-num {
+  background: linear-gradient(135deg, #e8607a, #8b3060);
+  color: white;
+}
+.step-tab.done .step-num {
+  background: rgba(34,197,94,0.12);
+  color: #22c55e;
+}
+
+/* panels */
+.panel { display: none; flex: 1; flex-direction: column; padding: 36px 48px 32px; animation: fadeUp 0.4s ease both; }
+.panel.active { display: flex; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:none;} }
+
+.back-link {
+  font-size: 0.8rem; color: #9a7080; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-bottom: 24px; font-weight: 500; transition: color 0.2s;
+  width: fit-content;
+}
+.back-link:hover { color: #c0517a; }
+
+.panel-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.65rem; font-weight: 900;
+  letter-spacing: -0.025em; color: #1a0a14;
+  margin-bottom: 6px; line-height: 1.15;
+}
+.panel-title em { font-style: italic; color: #d4456e; }
+.panel-subtitle {
+  font-size: 0.84rem; color: #9a7080;
+  line-height: 1.65; margin-bottom: 28px;
+}
+
+/* ── FACE AUTH PANEL ── */
+.camera-box {
+  flex: 1;
+  background: #0e0610;
+  border-radius: 20px;
+  border: 2px solid rgba(192,81,122,0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column;
+  position: relative; overflow: hidden;
+  margin-bottom: 16px;
+  min-height: 220px;
+}
+.camera-box::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(192,81,122,0.08) 0%, transparent 70%);
+}
+
+/* corner brackets on camera */
+.cam-corner {
+  position: absolute;
+  width: 24px; height: 24px;
+}
+.cam-corner::before, .cam-corner::after {
+  content: '';
+  position: absolute;
+  background: rgba(192,81,122,0.7);
+  border-radius: 1px;
+}
+.cc-tl { top: 16px; left: 16px; }
+.cc-tl::before { width: 2px; height: 20px; }
+.cc-tl::after  { width: 20px; height: 2px; }
+.cc-tr { top: 16px; right: 16px; }
+.cc-tr::before { width: 2px; height: 20px; right: 0; }
+.cc-tr::after  { width: 20px; height: 2px; right: 0; }
+.cc-bl { bottom: 16px; left: 16px; }
+.cc-bl::before { width: 2px; height: 20px; bottom: 0; }
+.cc-bl::after  { width: 20px; height: 2px; bottom: 0; }
+.cc-br { bottom: 16px; right: 16px; }
+.cc-br::before { width: 2px; height: 20px; bottom: 0; right: 0; }
+.cc-br::after  { width: 20px; height: 2px; bottom: 0; right: 0; }
+
+.face-oval {
+  width: 110px; height: 138px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255,107,138,0.55);
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  animation: ovalpulse 2s ease-in-out infinite;
+}
+.face-oval::before {
+  content: '';
+  position: absolute; inset: -8px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,107,138,0.2);
+}
+.face-oval-icon { font-size: 3rem; filter: grayscale(0.3); }
+
+.cam-scan {
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 10%, rgba(255,107,138,0.9) 50%, transparent 90%);
+  animation: camScan 2.2s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(255,107,138,0.6);
+}
+@keyframes camScan {
+  0%   { top: 15%;  opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { top: 85%;  opacity: 0; }
+}
+@keyframes ovalpulse {
+  0%,100% { border-color: rgba(255,107,138,0.55); }
+  50%     { border-color: rgba(255,107,138,0.9); box-shadow: 0 0 20px rgba(255,107,138,0.2); }
+}
+
+.cam-status {
+  position: absolute; bottom: 12px;
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50px;
+  padding: 6px 14px;
+  font-size: 0.69rem; font-weight: 600; color: rgba(255,255,255,0.8);
+  z-index: 5;
+}
+.cam-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #ff6b8a;
+  animation: blink 1.2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+.tips-row {
+  display: flex; gap: 8px; margin-bottom: 16px;
+}
+.tip {
+  flex: 1;
+  background: #fff5f8;
+  border: 1px solid rgba(192,81,122,0.1);
+  border-radius: 10px;
+  padding: 10px 10px;
+  text-align: center;
+  font-size: 0.69rem; color: #9a7080; line-height: 1.4;
+}
+.tip-icon { font-size: 1rem; margin-bottom: 4px; }
+
+.btn-face {
+  width: 100%; padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e8607a, #c0517a, #8b3060);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem; font-weight: 700;
+  color: white; cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 6px 22px rgba(192,81,122,0.35);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-face:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(192,81,122,0.5); }
+.btn-face-ghost {
+  width: 100%; padding: 12px;
+  border-radius: 14px;
+  background: transparent;
+  border: 1.5px solid rgba(192,81,122,0.22);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.86rem; font-weight: 600;
+  color: #9a7080; cursor: pointer;
+  transition: 0.3s; margin-top: 10px;
+}
+.btn-face-ghost:hover { border-color: #c0517a; color: #c0517a; }
+
+/* ── OTP PANEL ── */
+.phone-display {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff5f8;
+  border: 1.5px solid rgba(192,81,122,0.15);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+}
+.phone-flag { font-size: 1.3rem; }
+.phone-info { flex: 1; }
+.phone-info-num { font-size: 0.9rem; font-weight: 600; color: #1a0a14; }
+.phone-info-label { font-size: 0.68rem; color: #9a7080; margin-top: 1px; }
+.phone-edit {
+  font-size: 0.75rem; color: #d4456e; font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  background: none; border: none; font-family: 'DM Sans', sans-serif;
+}
+.phone-edit:hover { text-decoration: underline; }
+
+.input-phone-wrap {
+  display: flex; gap: 10px; margin-bottom: 16px;
+}
+.country-select {
+  padding: 13px 14px;
+  background: #fff5f8;
+  border: 1.5px solid rgba(192,81,122,0.18);
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem; color: #1a0a14;
+  outline: none; cursor: pointer;
+  min-width: 80px;
+}
+.country-select:focus { border-color: rgba(192,81,122,0.5); }
+
+.otp-boxes {
+  display: flex; gap: 8px;
+  margin-bottom: 18px;
+  justify-content: center;
+}
+.otp-box {
+  width: 46px;
+  height: 54px;
+  background: #fff5f8;
+  border: 1.5px solid rgba(192,81,122,0.18);
+  border-radius: 12px;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-size: 1.5rem; font-weight: 900;
+  color: #1a0a14;
+  outline: none; transition: 0.25s;
+  caret-color: #c0517a;
+}
+.otp-box:focus {
+  border-color: #c0517a;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(192,81,122,0.1);
+}
+.otp-box.filled {
+  border-color: rgba(192,81,122,0.4);
+  background: white;
+}
+
+.otp-timer {
+  text-align: center;
+  font-size: 0.78rem; color: #9a7080;
+  margin-bottom: 18px;
+}
+.otp-timer span { color: #d4456e; font-weight: 700; }
+.resend-btn {
+  background: none; border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem; font-weight: 700;
+  color: #d4456e; cursor: pointer;
+  display: none;
+}
+.resend-btn:hover { text-decoration: underline; }
+
+.btn-verify {
+  width: 100%; padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #e8607a, #c0517a, #8b3060);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem; font-weight: 700;
+  color: white; cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 6px 22px rgba(192,81,122,0.35);
+  margin-bottom: 0;
+}
+.btn-verify:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(192,81,122,0.5); }
+
+.secure-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; margin-top: auto; padding-top: 16px;
+  padding: 11px 16px;
+  background: #f3fdf6;
+  border: 1px solid rgba(34,197,94,0.18);
+  border-radius: 50px;
+  font-size: 0.69rem; color: #16a34a; font-weight: 600;
+}
+.secure-row span { color: #9a7080; }
+
+/* success state */
+.success-overlay {
+  display: none;
+  position: absolute; inset: 0;
+  background: white;
+  flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 20;
+  animation: fadeUp 0.5s ease both;
+  padding: 40px;
+  text-align: center;
+}
+.success-overlay.show { display: flex; }
+.success-icon {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, #e8607a, #8b3060);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem;
+  margin-bottom: 22px;
+  box-shadow: 0 12px 32px rgba(192,81,122,0.4);
+  animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes popIn { from{transform:scale(0);opacity:0;} to{transform:scale(1);opacity:1;} }
+.success-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.6rem; font-weight: 900;
+  color: #1a0a14; margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.success-title em { font-style: italic; color: #d4456e; }
+.success-sub {
+  font-size: 0.86rem; color: #9a7080;
+  line-height: 1.65; margin-bottom: 28px;
+  max-width: 260px;
+}
+.btn-enter {
+  padding: 14px 36px;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #e8607a, #c0517a, #8b3060);
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.92rem; font-weight: 700;
+  color: white; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(192,81,122,0.4);
+  transition: 0.3s;
+}
+.btn-enter:hover { transform: translateY(-2px); }
+
+/* form input */
+.form-input {
+  width: 100%; padding: 13px 16px;
+  background: #fff5f8;
+  border: 1.5px solid rgba(192,81,122,0.18);
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem; color: #1a0a14;
+  outline: none; transition: 0.25s;
+}
+.form-input::placeholder { color: #d4aab8; }
+.form-input:focus {
+  border-color: rgba(192,81,122,0.5);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(192,81,122,0.08);
+}
+.form-label {
+  display: block; font-size: 0.76rem; font-weight: 600;
+  color: #5a3045; margin-bottom: 7px; letter-spacing: 0.01em;
+}
+.form-group { margin-bottom: 14px; }
+
+/* responsive */
+@media(max-width: 768px) {
+  .card { grid-template-columns: 1fr; }
+  .left { padding: 32px 28px; min-height: auto; }
+  .face-illustration { margin: 20px 0; }
+  .panel { padding: 28px 24px; }
+  body { padding: 12px; align-items: flex-start; }
+}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <div class="left-logo">
+      <div class="left-logo-icon">🛡️</div>
+      <span class="left-logo-text">SafePing</span>
+    </div>
+
+    <div class="left-content">
+      <div class="step-indicators">
+        <div class="step-dot done" style="width:28px;"></div>
+        <div class="step-dot active" id="dot-face"></div>
+        <div class="step-dot upcoming" id="dot-otp"></div>
+      </div>
+
+      <div class="left-step-label" id="left-step-label">Step 2 of 3 — Face Verification</div>
+      <div class="left-headline">
+        <h2 id="left-h2">Prove It's<br><em>Really You.</em></h2>
+      </div>
+      <p class="left-desc" id="left-desc">SafePing uses face-only authentication to ensure your account can never be accessed by anyone else — ever.</p>
+
+      <div class="face-illustration">
+        <div class="face-ring-wrap">
+          <div class="face-ring-outer"></div>
+          <div class="face-ring-mid"></div>
+          <div class="face-circle">👤</div>
+          <div class="scan-line"></div>
+          <div class="face-corner fc-tl"></div>
+          <div class="face-corner fc-tr"></div>
+          <div class="face-corner fc-bl"></div>
+          <div class="face-corner fc-br"></div>
+        </div>
+      </div>
+
+      <div class="left-stats">
+        <div class="left-stat"><span class="ls-num">0%</span><span class="ls-label">False Accept</span></div>
+        <div class="left-stat"><span class="ls-num">👁️</span><span class="ls-label">Liveness Check</span></div>
+        <div class="left-stat"><span class="ls-num">🔒</span><span class="ls-label">On-Device Only</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+
+    <!-- step tabs -->
+    <div class="step-tabs">
+      <button class="step-tab done" onclick="goToStep('face')">
+        <span class="step-num">✓</span> Account Created
+      </button>
+      <button class="step-tab active" id="tab-face" onclick="goToStep('face')">
+        <span class="step-num" id="sn-face">2</span> Face Auth
+      </button>
+      <button class="step-tab" id="tab-otp" onclick="goToStep('otp')">
+        <span class="step-num" id="sn-otp">3</span> OTP Verify
+      </button>
+    </div>
+
+    <!-- FACE AUTH PANEL -->
+    <div class="panel active" id="panel-face">
+      <a class="back-link" href="login.html">← Back</a>
+
+      <div class="panel-title">Face <em>Authentication</em></div>
+      <p class="panel-subtitle">Look directly at your camera. Make sure your face is well-lit and fully visible inside the oval.</p>
+
+      <div class="camera-box">
+        <div class="cam-corner cc-tl"></div>
+        <div class="cam-corner cc-tr"></div>
+        <div class="cam-corner cc-bl"></div>
+        <div class="cam-corner cc-br"></div>
+        <div class="face-oval">
+          <video id="camera-feed" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none;"></video>
+          <span class="face-oval-icon" id="face-placeholder">👤</span>
+        </div>
+        <canvas id="camera-canvas" style="display: none;"></canvas>
+        <div class="cam-scan"></div>
+        <div class="cam-status">
+          <div class="cam-live-dot"></div>
+          Scanning for face…
+        </div>
+      </div>
+
+      <div class="tips-row">
+        <div class="tip"><div class="tip-icon">☀️</div>Good lighting</div>
+        <div class="tip"><div class="tip-icon">👁️</div>Remove glasses</div>
+        <div class="tip"><div class="tip-icon">📱</div>Hold steady</div>
+      </div>
+
+      <button class="btn-face" onclick="simulateFaceScan(this)">
+        👁️ Start Face Scan
+      </button>
+
+    </div>
+
+    <!-- OTP PANEL -->
+    <div class="panel" id="panel-otp">
+      <a class="back-link" href="#" onclick="goToStep('face');return false;">← Back to Face Auth</a>
+
+      <div class="panel-title">Verify Your <em>Number</em></div>
+      <p class="panel-subtitle" id="otp-subtitle">Enter your mobile number. We'll send a 6-digit OTP to confirm it's you.</p>
+
+      <!-- step A: enter phone -->
+      <div id="otp-step-phone">
+        <div class="form-group">
+          <label class="form-label">Mobile Number</label>
+          <div class="input-phone-wrap">
+            <select class="country-select">
+              <option value="+91">🇮🇳 +91</option>
+              <option value="+1">🇺🇸 +1</option>
+              <option value="+44">🇬🇧 +44</option>
+              <option value="+61">🇦🇺 +61</option>
+              <option value="+971">🇦🇪 +971</option>
+            </select>
+            <input class="form-input" type="tel" id="phone-input" placeholder="98765 43210" maxlength="10">
+          </div>
+        </div>
+        <button class="btn-verify" onclick="sendOTP()">Send OTP →</button>
+      </div>
+
+      <!-- step B: enter OTP -->
+      <div id="otp-step-code" style="display:none;">
+        <div class="phone-display">
+          <span class="phone-flag">📱</span>
+          <div class="phone-info">
+            <div class="phone-info-num" id="phone-display-num">+91 98765 43210</div>
+            <div class="phone-info-label">OTP sent successfully</div>
+          </div>
+          <button class="phone-edit" onclick="changePhone()">Change</button>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label class="form-label">Enter 6-digit OTP</label>
+          <div class="otp-boxes">
+            <input class="otp-box" type="text" maxlength="1" id="o1" oninput="otpMove(this,null,'o2')">
+            <input class="otp-box" type="text" maxlength="1" id="o2" oninput="otpMove(this,'o1','o3')">
+            <input class="otp-box" type="text" maxlength="1" id="o3" oninput="otpMove(this,'o2','o4')">
+            <input class="otp-box" type="text" maxlength="1" id="o4" oninput="otpMove(this,'o3','o5')">
+            <input class="otp-box" type="text" maxlength="1" id="o5" oninput="otpMove(this,'o4','o6')">
+            <input class="otp-box" type="text" maxlength="1" id="o6" oninput="otpMove(this,'o5',null)">
+          </div>
+        </div>
+
+        <div class="otp-timer" id="otp-timer">Resend OTP in <span id="timer-count">30</span>s</div>
+        <button class="resend-btn" id="resend-btn" onclick="resendOTP()">Resend OTP</button>
+
+        <button class="btn-verify" onclick="verifyOTP()">Verify &amp; Enter SafePing →</button>
+      </div>
+
+      <div class="secure-row" style="margin-top:16px;">
+        🔒 End-to-end encrypted <span>·</span> Women-exclusive <span>·</span> Biometric verified
+      </div>
+    </div>
+
+    <!-- SUCCESS OVERLAY -->
+    <div class="success-overlay" id="success-overlay">
+      <div class="success-icon">🛡️</div>
+      <div class="success-title">You're <em>Verified!</em></div>
+      <p class="success-sub">Your identity is confirmed. Welcome to SafePing — your shield is now always on.</p>
+      <button class="btn-enter" onclick="window.location.href='index.html'">Enter SafePing →</button>
+    </div>
+
+  </div><!-- /right -->
+</div><!-- /card -->
+
+<script>
+/* ── tab switching ── */
+function goToStep(step) {
+  ['face','otp'].forEach(s => {
+    document.getElementById('panel-'+s).classList.remove('active');
+    document.getElementById('tab-'+s).classList.remove('active');
+  });
+  document.getElementById('panel-'+step).classList.add('active');
+  document.getElementById('tab-'+step).classList.add('active');
+
+  // update left panel
+  if (step === 'face') {
+    document.getElementById('left-step-label').textContent = 'Step 2 of 3 — Face Verification';
+    document.getElementById('left-h2').innerHTML = 'Prove It\'s<br><em>Really You.</em>';
+    document.getElementById('left-desc').textContent = 'SafePing uses face-only authentication to ensure your account can never be accessed by anyone else — ever.';
+    document.getElementById('dot-face').classList.add('active');
+    document.getElementById('dot-otp').classList.remove('active');
+    document.getElementById('dot-face').style.width = '44px';
+    document.getElementById('dot-otp').style.width = '20px';
+  } else {
+    document.getElementById('left-step-label').textContent = 'Step 3 of 3 — Phone Verification';
+    document.getElementById('left-h2').innerHTML = 'One Last<br><em>Safe Check.</em>';
+    document.getElementById('left-desc').textContent = 'A quick OTP to your number ensures only you can access SafePing — even if someone else knows your password.';
+    document.getElementById('dot-face').classList.remove('active');
+    document.getElementById('dot-otp').classList.add('active');
+    document.getElementById('dot-face').style.width = '28px';
+    document.getElementById('dot-otp').style.width = '44px';
+  }
+}
+
+/* ── face scan simulation ── */
+const MODEL_URL = './models';
+let videoStream = null;
+
+async function startCamera() {
+  const video = document.getElementById('camera-feed');
+  const placeholder = document.getElementById('face-placeholder');
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+    video.srcObject = videoStream;
+    return new Promise((resolve) => {
+      video.onloadeddata = () => {
+        video.style.display = 'block';
+        placeholder.style.display = 'none';
+        resolve();
+      };
+    });
+  } catch (err) {
+    console.error("Camera access denied or error:", err);
+    alert('Camera access is required for Face Verification.');
+    throw err;
+  }
+}
+
+async function simulateFaceScan(btn) {
+  btn.textContent = '⏳ Loading AI Models…';
+  btn.disabled = true;
+  btn.style.opacity = '0.75';
+  const status = document.querySelector('.cam-status');
+  
+  try {
+    status.innerHTML = '<div class="cam-live-dot"></div> Downloading Neural Net weights...';
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+    await faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL);
+  } catch(e) {
+    status.innerHTML = '❌ Failed to load AI models';
+    console.error(e);
+    btn.textContent = 'Try Again';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    return;
+  }
+
+  status.innerHTML = '<div class="cam-live-dot"></div> Starting Camera...';
+  
+  try {
+    await startCamera();
+  } catch(e) {
+    btn.textContent = 'Try Again';
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    return;
+  }
+
+  btn.textContent = '⏳ Analyzing…';
+  status.innerHTML = '<div class="cam-live-dot"></div> Analyzing facial features for gender...';
+  
+  const video = document.getElementById('camera-feed');
+  let scanInterval;
+  let attempts = 0;
+  
+  scanInterval = setInterval(async () => {
+    attempts++;
+    const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withAgeAndGender();
+    
+    if (detections) {
+      const gender = detections.gender; // 'male' or 'female'
+      const prob = detections.genderProbability;
+      
+      console.log(`Detected: ${gender} with probability ${prob}`);
+
+      if (gender === 'female') {
+         clearInterval(scanInterval);
+         // Female verified
+         status.innerHTML = '<div class="cam-live-dot" style="background:#22c55e"></div> Female verified! Identity confirmed.';
+         if (videoStream) videoStream.getTracks().forEach(t => t.stop());
+         
+         setTimeout(() => {
+           document.getElementById('tab-face').classList.add('done');
+           document.getElementById('tab-face').classList.remove('active');
+           document.getElementById('sn-face').textContent = '✓';
+           goToStep('otp');
+           btn.textContent = '👁️ Start Face Scan';
+           btn.disabled = false;
+           btn.style.opacity = '1';
+         }, 2000);
+      } else if (gender === 'male' && prob >= 0.8) {
+         clearInterval(scanInterval);
+         status.innerHTML = '❌ Access Denied: Not a female or girl.';
+         alert('Error: Not a female or girl detected.');
+         if (videoStream) videoStream.getTracks().forEach(t => t.stop());
+         btn.textContent = 'Try Again';
+         btn.disabled = false;
+         btn.style.opacity = '1';
+      }
+    } 
+    
+    // Check if timeout reached regardless of face being detected or not
+    if (attempts > 50) {
+      // 50 * 200ms = 10s timeout
+      clearInterval(scanInterval);
+      status.innerHTML = '❌ No clear female face detected within limit. Try again.';
+      alert('Error: No confident female or girl face detected. Please make sure the lighting is good.');
+      if (videoStream) videoStream.getTracks().forEach(t => t.stop());
+      btn.textContent = 'Try Again';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }, 200);
+}
+
+/* ── OTP flow ── */
+let timerInterval;
+
+async function sendOTP() {
+  const ph = document.getElementById('phone-input').value.trim();
+  if (ph.length < 7) { alert('Please enter a valid mobile number.'); return; }
+  const sel = document.querySelector('.country-select').value;
+  const fullPhone = sel + ph;
+
+  // Ask backend to send real OTP
+  try {
+    const res = await fetch('/api/auth/send-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: fullPhone })
+    });
+    const data = await res.json();
+    if (!data.success) {
+      alert('Error sending OTP: ' + data.message);
+      return;
+    } else if (data.mockOtp) {
+      alert(`[Testing/API Mock] Your OTP is: ${data.mockOtp}`);
+    }
+  } catch (e) {
+    alert('Network error. Cannot send OTP right now.');
+    return;
+  }
+
+  document.getElementById('phone-display-num').textContent = fullPhone;
+  document.getElementById('otp-step-phone').style.display = 'none';
+  document.getElementById('otp-step-code').style.display  = 'block';
+  document.getElementById('otp-subtitle').textContent = 'Enter the 6-digit OTP sent to your mobile number.';
+  document.getElementById('o1').focus();
+  startTimer(30);
+}
+
+function changePhone() {
+  clearInterval(timerInterval);
+  document.getElementById('otp-step-phone').style.display = 'block';
+  document.getElementById('otp-step-code').style.display  = 'none';
+  document.getElementById('otp-subtitle').textContent = 'Enter your mobile number. We\'ll send a 6-digit OTP to confirm it\'s you.';
+  ['o1','o2','o3','o4','o5','o6'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = '';
+    el.classList.remove('filled');
+  });
+}
+
+function startTimer(secs) {
+  let s = secs;
+  document.getElementById('timer-count').textContent = s;
+  document.getElementById('otp-timer').style.display = 'block';
+  document.getElementById('resend-btn').style.display = 'none';
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    s--;
+    document.getElementById('timer-count').textContent = s;
+    if (s <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById('otp-timer').style.display = 'none';
+      document.getElementById('resend-btn').style.display = 'block';
+    }
+  }, 1000);
+}
+
+function resendOTP() {
+  ['o1','o2','o3','o4','o5','o6'].forEach(id => {
+    const el = document.getElementById(id);
+    el.value = ''; el.classList.remove('filled');
+  });
+  document.getElementById('o1').focus();
+  startTimer(30);
+}
+
+function otpMove(el, prevId, nextId) {
+  const v = el.value.replace(/\D/g,'');
+  el.value = v;
+  if (v) {
+    el.classList.add('filled');
+    if (nextId) document.getElementById(nextId).focus();
+    else checkAllFilled();
+  } else {
+    el.classList.remove('filled');
+    if (prevId) document.getElementById(prevId).focus();
+  }
+}
+
+function checkAllFilled() {
+  const all = ['o1','o2','o3','o4','o5','o6'].every(id => document.getElementById(id).value !== '');
+  if (all) {
+    // Optionally auto-submit, but we wait for the user to press Verify manually
+  }
+}
+
+async function verifyOTP() {
+  const code = ['o1','o2','o3','o4','o5','o6'].map(id => document.getElementById(id).value).join('');
+  if (code.length < 6) { alert('Please enter the complete 6-digit OTP.'); return; }
+  
+  const phone = document.getElementById('phone-input').value;
+  const email = sessionStorage.getItem('sp_email');
+
+  try {
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone, otp: code, email })
+    });
+    const data = await res.json();
+    if (data.success) {
+      clearInterval(timerInterval);
+      document.getElementById('success-overlay').classList.add('show');
+      if (data.emailPreview) {
+        alert("Account Verified! Welcome Email Sent.\\nPreview your email here: " + data.emailPreview);
+      }
+    } else {
+      alert(data.message || 'OTP Verification failed');
+    }
+  } catch (err) {
+    alert('Network error verifying OTP.');
+  }
+}
+
+// keyboard backspace support for otp boxes
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Backspace') {
+    const active = document.activeElement;
+    const ids = ['o1','o2','o3','o4','o5','o6'];
+    const idx = ids.indexOf(active.id);
+    if (idx > 0 && active.value === '') {
+      document.getElementById(ids[idx-1]).focus();
+    }
+  }
+});
+</script>
+</body>
+</html>
