@@ -6,6 +6,8 @@
 <title>SafePing — Start Safe Journey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <style>
 :root {
   --blush:     #FF6B8A;
@@ -39,13 +41,12 @@ body {
   overflow-x: hidden;
 }
 
-/* Noise overlay */
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: 0.018;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
-/* ── NAV ── */
+/* NAV */
 nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 1000; height: 66px;
   background: rgba(255,246,240,0.9); backdrop-filter: blur(24px);
@@ -73,16 +74,14 @@ nav {
   transition: 0.25s; background: white;
 }
 .nav-back:hover { color: var(--blush); border-color: var(--blush); transform: translateX(-2px); }
-.nav-back svg { width: 15px; height: 15px; }
 
-/* ── MAIN LAYOUT ── */
+/* MAIN */
 main {
   min-height: 100vh; padding-top: 66px;
   background: linear-gradient(160deg, #FFF6F0 0%, #FDE8EF 45%, #F7E0F0 100%);
   position: relative;
 }
 
-/* Blobs */
 .bg-blob {
   position: fixed; border-radius: 50%; filter: blur(80px);
   opacity: 0.4; pointer-events: none; z-index: 0; animation: blobDrift 12s ease-in-out infinite;
@@ -96,7 +95,7 @@ main {
   position: relative; z-index: 2;
 }
 
-/* ── PAGE HEADER ── */
+/* PAGE HEADER */
 .page-header {
   text-align: center; margin-bottom: 2.8rem;
   opacity: 0; animation: fadeUp 0.7s ease 0.1s forwards;
@@ -123,7 +122,27 @@ main {
 .page-header p { font-size: 0.92rem; color: var(--muted); line-height: 1.7; max-width: 480px; margin: 0 auto; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(22px);} to{opacity:1;transform:none;} }
 
-/* ── PROGRESS STEPPER ── */
+/* SAVED USER BANNER */
+.saved-banner {
+  display: none; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(34,197,94,0.04));
+  border: 1.5px solid rgba(34,197,94,0.25); border-radius: 16px;
+  padding: 14px 20px; margin-bottom: 1.5rem;
+  animation: fadeUp 0.4s ease forwards;
+}
+.saved-banner.show { display: flex; }
+.sb-icon { font-size: 1.3rem; }
+.sb-text { flex: 1; }
+.sb-title { font-size: 0.82rem; font-weight: 800; color: #166534; }
+.sb-sub { font-size: 0.72rem; color: var(--muted); }
+.sb-use { padding: 8px 18px; border-radius: 50px; background: #166534; color: white;
+  border: none; font-family: 'DM Sans', sans-serif; font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; transition: 0.3s; }
+.sb-use:hover { background: #15803d; transform: translateY(-1px); }
+.sb-dismiss { background: none; border: none; color: var(--muted); font-size: 1rem;
+  cursor: pointer; padding: 4px; line-height: 1; }
+
+/* STEPPER */
 .stepper {
   display: flex; align-items: center; justify-content: center;
   gap: 0; margin-bottom: 2.8rem; max-width: 520px; margin-left: auto; margin-right: auto;
@@ -152,7 +171,7 @@ main {
 .step.active .step-label { color: var(--blush); }
 .step.done .step-label { color: var(--green); }
 
-/* ── FORM CARD ── */
+/* FORM CARD */
 .form-card {
   background: white; border-radius: var(--radius-lg);
   border: 1px solid rgba(255,107,138,0.08);
@@ -160,7 +179,6 @@ main {
   opacity: 0; animation: fadeUp 0.7s ease 0.35s forwards;
 }
 
-/* Form panels */
 .form-panel { display: none; padding: 0; }
 .form-panel.active { display: block; }
 
@@ -180,7 +198,7 @@ main {
 
 .panel-body { padding: 2rem 2.5rem; }
 
-/* ── FORM FIELDS ── */
+/* FIELDS */
 .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 .field-full { grid-column: 1 / -1; }
 
@@ -210,11 +228,31 @@ main {
   background: white;
 }
 .form-input::placeholder { color: #c8b0bc; }
-.form-input:focus + .input-suffix { opacity: 1; }
 
-/* Location inputs with detect button */
+/* Autocomplete dropdown */
+.autocomplete-wrap { position: relative; }
+.autocomplete-list {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 500;
+  background: white; border-radius: 14px; border: 1.5px solid rgba(255,107,138,0.15);
+  box-shadow: 0 12px 40px rgba(192,107,138,0.18); overflow: hidden;
+  max-height: 220px; overflow-y: auto;
+}
+.autocomplete-list:empty { display: none; }
+.ac-item {
+  padding: 11px 16px; font-size: 0.83rem; cursor: pointer;
+  border-bottom: 1px solid rgba(255,107,138,0.06); transition: 0.2s;
+  display: flex; align-items: flex-start; gap: 10px; color: var(--dark);
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover { background: var(--soft); color: var(--plum); }
+.ac-pin { color: var(--blush); flex-shrink: 0; margin-top: 1px; }
+.ac-text { flex: 1; line-height: 1.4; }
+.ac-main { font-weight: 600; font-size: 0.85rem; }
+.ac-sub { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+
+/* Location inputs */
 .loc-row { display: flex; gap: 10px; align-items: flex-start; }
-.loc-row .input-wrap { flex: 1; }
+.loc-row .autocomplete-wrap { flex: 1; }
 .btn-detect {
   padding: 13px 16px; border-radius: var(--radius-sm);
   background: var(--grad-soft); border: 1.5px solid rgba(255,107,138,0.2);
@@ -225,7 +263,34 @@ main {
 .btn-detect:hover { background: rgba(255,107,138,0.12); border-color: var(--blush); color: var(--blush); }
 .btn-detect svg { width: 14px; height: 14px; }
 
-/* Contact tags */
+/* MAP SECTION */
+.map-section {
+  margin-top: 22px; border-radius: 20px; overflow: hidden;
+  border: 2px solid rgba(255,107,138,0.12);
+  box-shadow: 0 8px 32px rgba(192,107,138,0.15);
+  display: none; /* shown when locations are set */
+}
+.map-section.show { display: block; }
+.map-header {
+  background: var(--grad); padding: 10px 18px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.78rem; font-weight: 700; color: white;
+}
+#journey-map {
+  height: 320px; width: 100%;
+  background: #e8d5e5;
+}
+/* Leaflet popup customization */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(192,107,138,0.25) !important;
+  border: 1.5px solid rgba(255,107,138,0.15) !important;
+}
+.leaflet-popup-tip { background: white !important; }
+.map-popup-title { font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.85rem; color: var(--dark); }
+.map-popup-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+/* Contacts */
 .contacts-input-wrap { display: flex; flex-direction: column; gap: 10px; }
 .contact-tags { display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px; }
 .contact-tag {
@@ -259,7 +324,6 @@ main {
 }
 .btn-add-contact:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(255,107,138,0.45); }
 
-/* Contact suggestion chips */
 .contact-suggestions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 .sug-chip {
   padding: 5px 13px; border-radius: 50px; border: 1.5px dashed rgba(255,107,138,0.3);
@@ -269,41 +333,7 @@ main {
 }
 .sug-chip:hover { border-color: var(--blush); color: var(--blush); background: rgba(255,107,138,0.06); }
 
-/* Duration slider */
-.duration-field { grid-column: 1 / -1; }
-.duration-display {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 10px;
-}
-.duration-val {
-  font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 900;
-  background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  line-height: 1;
-}
-.duration-unit { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
-.duration-presets { display: flex; gap: 8px; margin-bottom: 12px; }
-.preset-btn {
-  padding: 6px 14px; border-radius: 50px; border: 1.5px solid rgba(255,107,138,0.2);
-  font-family: 'DM Sans', sans-serif; font-size: 0.73rem; font-weight: 600;
-  color: var(--muted); cursor: pointer; background: white; transition: 0.25s;
-}
-.preset-btn:hover, .preset-btn.active {
-  background: var(--grad); color: white; border-color: transparent;
-  box-shadow: 0 4px 14px rgba(255,107,138,0.3);
-}
-input[type=range] {
-  -webkit-appearance: none; width: 100%; height: 5px;
-  border-radius: 3px; background: linear-gradient(90deg, var(--blush) 0%, #f0e0ea 0%);
-  outline: none; cursor: pointer;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
-  background: white; border: 3px solid var(--blush);
-  box-shadow: 0 4px 12px rgba(255,107,138,0.35); cursor: pointer; transition: 0.2s;
-}
-input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-
-/* Vehicle type selector */
+/* Vehicle selector */
 .vehicle-options { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
 .v-option {
   padding: 14px 8px; border-radius: 14px; border: 2px solid rgba(192,107,138,0.1);
@@ -319,7 +349,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .v-label { font-size: 0.68rem; font-weight: 700; color: var(--muted); }
 .v-option.selected .v-label { color: var(--plum); }
 
-/* Safety level */
+/* Safety opts */
 .safety-opts { display: flex; gap: 10px; }
 .safety-opt {
   flex: 1; padding: 12px; border-radius: 14px;
@@ -343,15 +373,14 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .form-textarea:focus { border-color: rgba(255,107,138,0.45); box-shadow: 0 0 0 3px rgba(255,107,138,0.1); background: white; }
 .form-textarea::placeholder { color: #c8b0bc; }
 
-/* Field hint */
 .field-hint { font-size: 0.7rem; color: var(--muted); line-height: 1.4; }
 
-/* Error state */
+/* Error */
 .form-input.error { border-color: rgba(255,69,96,0.5); background: rgba(255,69,96,0.03); }
 .error-msg { font-size: 0.7rem; color: var(--coral); font-weight: 600; margin-top: 2px; display: none; }
 .error-msg.show { display: block; animation: fadeUp 0.2s ease; }
 
-/* ── PANEL NAVIGATION ── */
+/* Panel nav */
 .panel-footer {
   padding: 1.5rem 2.5rem 2rem;
   border-top: 1px solid rgba(255,107,138,0.07);
@@ -375,11 +404,10 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 }
 .btn-next:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,107,138,0.5); }
 .btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
 .step-counter { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
 .step-counter span { color: var(--blush); font-weight: 800; }
 
-/* ── REVIEW PANEL ── */
+/* Review */
 .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .review-card {
   background: #fdf8fa; border-radius: 16px;
@@ -402,16 +430,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .rc-edit:hover { background: var(--soft); }
 .review-header-row { display: flex; justify-content: space-between; align-items: flex-start; }
 
-/* Safety level badge */
-.safety-badge {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 16px; border-radius: 50px; font-size: 0.82rem; font-weight: 700;
-}
-.safety-badge.low { background: rgba(34,197,94,0.1); color: #16a34a; }
-.safety-badge.medium { background: rgba(251,191,36,0.1); color: #b45309; }
-.safety-badge.high { background: rgba(255,69,96,0.1); color: var(--coral); }
-
-/* Journey summary card */
+/* Journey summary card in review */
 .journey-summary {
   background: var(--grad); border-radius: 20px; padding: 20px;
   color: white; margin-bottom: 20px; position: relative; overflow: hidden;
@@ -422,15 +441,12 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   background: rgba(255,255,255,0.08); pointer-events: none;
 }
 .js-route { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.js-point {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 0.85rem; font-weight: 700;
-}
+.js-point { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; }
 .js-arrow { font-size: 1rem; opacity: 0.7; }
 .js-meta { display: flex; gap: 14px; flex-wrap: wrap; }
 .js-meta-item { font-size: 0.73rem; opacity: 0.85; display: flex; align-items: center; gap: 5px; }
 
-/* ── SUCCESS PANEL ── */
+/* SUCCESS */
 .success-panel { padding: 3rem 2.5rem; text-align: center; }
 .success-icon {
   width: 90px; height: 90px; border-radius: 50%; background: var(--grad);
@@ -439,10 +455,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards;
 }
 @keyframes popIn { from{opacity:0;transform:scale(0.5);} to{opacity:1;transform:scale(1);} }
-.success-panel h2 {
-  font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 900;
-  letter-spacing: -0.02em; margin-bottom: 0.6rem;
-}
+.success-panel h2 { font-family: 'Fraunces', serif; font-size: 2rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 0.6rem; }
 .success-panel h2 em { font-style: italic; color: var(--blush); }
 .success-panel > p { font-size: 0.9rem; color: var(--muted); line-height: 1.7; max-width: 400px; margin: 0 auto 2rem; }
 
@@ -482,7 +495,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 }
 .btn-share-journey:hover { border-color: var(--blush); color: var(--blush); }
 
-/* ── SIDEBAR INFO ── */
+/* SIDEBAR */
 .side-info { display: flex; flex-direction: column; gap: 16px; }
 .info-card {
   background: white; border-radius: 20px; padding: 20px;
@@ -499,10 +512,9 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .ic-stat { font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 900; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 2px; }
 .ic-stat-label { font-size: 0.7rem; color: var(--muted); }
 
-/* Two-column layout */
 .page-layout { display: grid; grid-template-columns: 1fr 320px; gap: 28px; align-items: start; }
 
-/* Shimmer loading */
+/* Loading state */
 .btn-next.loading { pointer-events: none; }
 .btn-next.loading .btn-text { display: none; }
 .btn-next.loading::after {
@@ -512,7 +524,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Floating live indicator */
+/* Live indicator */
 .live-indicator {
   position: fixed; bottom: 28px; right: 28px; z-index: 100;
   display: flex; align-items: center; gap: 9px;
@@ -523,7 +535,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 }
 .li-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.4s ease-in-out infinite; }
 
-/* Toast notifications */
+/* Toast */
 .toast-wrap { position: fixed; top: 80px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
 .toast {
   background: white; border-radius: 14px; padding: 14px 18px;
@@ -538,7 +550,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .toast-title { font-size: 0.8rem; font-weight: 700; color: var(--dark); }
 .toast-sub { font-size: 0.7rem; color: var(--muted); }
 
-/* Responsive */
 @media(max-width: 900px) {
   .page-layout { grid-template-columns: 1fr; }
   .side-info { display: grid; grid-template-columns: 1fr 1fr; }
@@ -555,19 +566,12 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   .vehicle-options { grid-template-columns: repeat(2,1fr); }
   .safety-opts { flex-wrap: wrap; }
   .side-info { grid-template-columns: 1fr; }
-  .stepper { gap: 0; }
-  .step-label { font-size: 0.58rem; }
   .success-panel { padding: 2rem 1.25rem; }
-}
-@media(max-width: 400px) {
-  .vehicle-options { grid-template-columns: repeat(2,1fr); }
-  .btn-prev, .btn-next { padding: 12px 20px; font-size: 0.82rem; }
 }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
   <div class="nav-inner">
     <a class="logo" href="index.html">
@@ -575,59 +579,51 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
       Safe<span class="hi">Ping</span>
     </a>
     <a class="nav-back" href="index.html">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="15" height="15"><polyline points="15 18 9 12 15 6"/></svg>
       Back to Home
     </a>
   </div>
 </nav>
 
-<!-- TOAST CONTAINER -->
 <div class="toast-wrap" id="toastWrap"></div>
 
-<!-- BACKGROUND BLOBS -->
 <div class="bg-blob blob1"></div>
 <div class="bg-blob blob2"></div>
-
-<!-- LIVE INDICATOR -->
 <div class="live-indicator"><div class="li-dot"></div> SafePing Active</div>
 
 <main>
   <div class="page-wrap">
 
-    <!-- HEADER -->
     <div class="page-header">
       <div class="header-pill"><div class="header-dot"></div> New Journey Registration</div>
       <h1>Start Your <em>Safe</em><br>Journey</h1>
       <p>Fill in your trip details and SafePing will silently protect you — alerting your trusted contacts if anything feels wrong.</p>
     </div>
 
-    <!-- STEPPER -->
-    <div class="stepper" id="stepper">
-      <div class="step active" data-step="1">
-        <div class="step-circle">1</div>
-        <div class="step-label">Your Info</div>
+    <!-- SAVED USER BANNER (Condition 1) -->
+    <div class="saved-banner" id="savedBanner">
+      <span class="sb-icon">✨</span>
+      <div class="sb-text">
+        <div class="sb-title" id="sb-title">Welcome back!</div>
+        <div class="sb-sub">We found your saved info. Fill it in automatically?</div>
       </div>
-      <div class="step" data-step="2">
-        <div class="step-circle">2</div>
-        <div class="step-label">Journey</div>
-      </div>
-      <div class="step" data-step="3">
-        <div class="step-circle">3</div>
-        <div class="step-label">Contacts</div>
-      </div>
-      <div class="step" data-step="4">
-        <div class="step-circle">4</div>
-        <div class="step-label">Review</div>
-      </div>
+      <button class="sb-use" onclick="restoreSavedUser()">Use Saved Info</button>
+      <button class="sb-dismiss" onclick="dismissBanner()" title="Dismiss">✕</button>
     </div>
 
-    <!-- TWO-COLUMN LAYOUT -->
+    <div class="stepper" id="stepper">
+      <div class="step active" data-step="1"><div class="step-circle">1</div><div class="step-label">Your Info</div></div>
+      <div class="step" data-step="2"><div class="step-circle">2</div><div class="step-label">Journey</div></div>
+      <div class="step" data-step="3"><div class="step-circle">3</div><div class="step-label">Contacts</div></div>
+      <div class="step" data-step="4"><div class="step-circle">4</div><div class="step-label">Review</div></div>
+    </div>
+
     <div class="page-layout">
 
-      <!-- MAIN FORM CARD -->
+      <!-- FORM CARD -->
       <div class="form-card" id="formCard">
 
-        <!-- ═══════════════ PANEL 1: Personal Info ═══════════════ -->
+        <!-- PANEL 1: Personal Info -->
         <div class="form-panel active" id="panel-1">
           <div class="panel-header">
             <div class="panel-icon">👤</div>
@@ -685,7 +681,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
           </div>
         </div>
 
-        <!-- ═══════════════ PANEL 2: Journey Details ═══════════════ -->
+        <!-- PANEL 2: Journey Details (NO duration slider - Condition 3) -->
         <div class="form-panel" id="panel-2">
           <div class="panel-header">
             <div class="panel-icon">🗺️</div>
@@ -700,9 +696,16 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
               <div class="form-group field-full">
                 <label class="form-label">📍 Current / Pickup Location <span class="label-req">*</span></label>
                 <div class="loc-row">
-                  <div class="input-wrap" style="flex:1">
-                    <span class="input-icon">📍</span>
-                    <input class="form-input" type="text" id="currentLoc" placeholder="Enter your current location" oninput="clearError(this)">
+                  <!-- Condition 2 & 4: autocomplete + map -->
+                  <div class="autocomplete-wrap" id="fromWrap">
+                    <div class="input-wrap">
+                      <span class="input-icon">📍</span>
+                      <input class="form-input" type="text" id="currentLoc"
+                        placeholder="Enter your current location"
+                        oninput="onLocInput(this,'fromList','from'); clearError(this)"
+                        autocomplete="off">
+                    </div>
+                    <div class="autocomplete-list" id="fromList"></div>
                   </div>
                   <button class="btn-detect" onclick="detectLocation()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>
@@ -712,30 +715,30 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
                 <span class="error-msg" id="loc-err">Please enter your current location</span>
               </div>
 
+              <!-- Condition 2: destination autocomplete -->
               <div class="form-group field-full">
                 <label class="form-label">🏁 Destination <span class="label-req">*</span></label>
-                <div class="input-wrap">
-                  <span class="input-icon">🏁</span>
-                  <input class="form-input" type="text" id="destination" placeholder="Where are you going?" oninput="clearError(this)">
+                <div class="autocomplete-wrap" id="toWrap">
+                  <div class="input-wrap">
+                    <span class="input-icon">🏁</span>
+                    <input class="form-input" type="text" id="destination"
+                      placeholder="Where are you going?"
+                      oninput="onLocInput(this,'toList','to'); clearError(this)"
+                      autocomplete="off">
+                  </div>
+                  <div class="autocomplete-list" id="toList"></div>
                 </div>
                 <span class="error-msg" id="dest-err">Please enter your destination</span>
               </div>
 
-              <div class="form-group field-full duration-field">
-                <label class="form-label">⏱️ Expected Journey Duration</label>
-                <div class="duration-display">
-                  <div>
-                    <div class="duration-val" id="durVal">30</div>
-                    <div class="duration-unit">minutes</div>
+              <!-- Condition 4 & 5: Live Map -->
+              <div class="form-group field-full">
+                <div class="map-section" id="mapSection">
+                  <div class="map-header">
+                    🌍 &nbsp;Route Preview — Your Journey on the Map
                   </div>
-                  <div class="duration-presets">
-                    <button class="preset-btn" onclick="setDuration(15,this)">15m</button>
-                    <button class="preset-btn active" onclick="setDuration(30,this)">30m</button>
-                    <button class="preset-btn" onclick="setDuration(60,this)">1hr</button>
-                    <button class="preset-btn" onclick="setDuration(120,this)">2hr</button>
-                  </div>
+                  <div id="journey-map"></div>
                 </div>
-                <input type="range" id="durSlider" min="5" max="240" step="5" value="30" oninput="updateDuration(this.value)">
               </div>
 
               <div class="form-group field-full">
@@ -792,7 +795,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
           </div>
         </div>
 
-        <!-- ═══════════════ PANEL 3: Trusted Contacts ═══════════════ -->
+        <!-- PANEL 3: Trusted Contacts -->
         <div class="form-panel" id="panel-3">
           <div class="panel-header">
             <div class="panel-icon">👥</div>
@@ -828,7 +831,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
               <div class="form-group field-full">
                 <label class="form-label">Alert Message to Contacts</label>
-                <textarea class="form-textarea" id="alertMsg" placeholder="This message will be sent to your contacts if SafePing triggers an alert…" rows="3">🚨 [Name] started a SafePing journey and hasn't checked in. Last known location: [GPS]. Please try reaching them immediately.</textarea>
+                <textarea class="form-textarea" id="alertMsg" rows="3">🚨 [Name] started a SafePing journey and hasn't checked in. Last known location: [GPS]. Please try reaching them immediately.</textarea>
                 <span class="field-hint">You can customize this message. [Name] and [GPS] will be filled in automatically.</span>
               </div>
 
@@ -857,7 +860,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
           </div>
         </div>
 
-        <!-- ═══════════════ PANEL 4: Review ═══════════════ -->
+        <!-- PANEL 4: Review -->
         <div class="form-panel" id="panel-4">
           <div class="panel-header">
             <div class="panel-icon">✅</div>
@@ -875,7 +878,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
                 <div class="js-point">🏁 <span id="rv-to">—</span></div>
               </div>
               <div class="js-meta">
-                <div class="js-meta-item">⏱️ <span id="rv-dur">—</span></div>
                 <div class="js-meta-item" id="rv-vehicle-wrap">🚗 <span id="rv-vehicle">—</span></div>
                 <div class="js-meta-item" id="rv-risk-wrap">⚠️ <span id="rv-risk">—</span></div>
               </div>
@@ -934,7 +936,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
           </div>
         </div>
 
-        <!-- ═══════════════ SUCCESS PANEL ═══════════════ -->
+        <!-- SUCCESS PANEL -->
         <div class="form-panel" id="panel-success">
           <div class="success-panel">
             <div class="success-icon">🛡️</div>
@@ -944,7 +946,6 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
             <div class="success-details" id="successDetails">
               <div class="sd-row"><span class="sd-label">Traveller</span><span class="sd-val" id="sd-name">—</span></div>
               <div class="sd-row"><span class="sd-label">Route</span><span class="sd-val" id="sd-route">—</span></div>
-              <div class="sd-row"><span class="sd-label">Check-in Timer</span><span class="sd-val" id="sd-timer">—</span></div>
               <div class="sd-row"><span class="sd-label">Vehicle</span><span class="sd-val" id="sd-vehicle">—</span></div>
               <div class="sd-row"><span class="sd-label">Journey ID</span><span class="sd-val" id="sd-jid" style="color:var(--blush);font-family:'Fraunces',serif;">—</span></div>
             </div>
@@ -963,75 +964,254 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
       <!-- SIDEBAR -->
       <div class="side-info">
-
         <div class="info-card">
-          <div class="ic-header">
-            <span class="ic-ico">⚡</span>
-            <span class="ic-title">How It Works</span>
-          </div>
-          <div class="ic-body">
-            Once you start, SafePing silently runs in the background. If you don't tap "I'm Safe" before your timer ends, your contacts are automatically alerted — no action needed from you.
-          </div>
+          <div class="ic-header"><span class="ic-ico">⚡</span><span class="ic-title">How It Works</span></div>
+          <div class="ic-body">Once you start, SafePing silently runs in the background. If you don't tap "I'm Safe" before your timer ends, your contacts are automatically alerted.</div>
         </div>
-
         <div class="info-card">
           <div class="ic-stat">50K+</div>
           <div class="ic-stat-label">Women protected this month</div>
           <div style="height:1px;background:rgba(255,107,138,0.1);margin:10px 0;"></div>
           <div class="ic-body">Join thousands of women who travel safer every day with SafePing.</div>
         </div>
-
         <div class="info-card">
-          <div class="ic-header">
-            <span class="ic-ico">🔒</span>
-            <span class="ic-title">Privacy First</span>
-          </div>
-          <div class="ic-body">
-            Your location is end-to-end encrypted. We never sell, analyze, or share your data. SafePing sees nothing — only your emergency contacts do, and only when needed.
-          </div>
+          <div class="ic-header"><span class="ic-ico">🔒</span><span class="ic-title">Privacy First</span></div>
+          <div class="ic-body">Your location is end-to-end encrypted. We never sell, analyze, or share your data. Only your emergency contacts see it, and only when needed.</div>
         </div>
-
         <div class="info-card">
-          <div class="ic-header">
-            <span class="ic-ico">🆘</span>
-            <span class="ic-title">Emergency Helplines</span>
-          </div>
+          <div class="ic-header"><span class="ic-ico">🆘</span><span class="ic-title">Emergency Helplines</span></div>
           <div class="ic-body" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
             <div style="display:flex;justify-content:space-between;font-size:0.78rem;"><span style="font-weight:700;">Women Helpline</span><span style="color:var(--blush);font-weight:800;">1091</span></div>
             <div style="display:flex;justify-content:space-between;font-size:0.78rem;"><span style="font-weight:700;">Police</span><span style="color:var(--blush);font-weight:800;">100</span></div>
             <div style="display:flex;justify-content:space-between;font-size:0.78rem;"><span style="font-weight:700;">Ambulance</span><span style="color:var(--blush);font-weight:800;">108</span></div>
           </div>
         </div>
-
       </div>
 
     </div>
   </div>
 </main>
 
+<!-- Leaflet JS (Condition 4 & 5) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-/* ══════════════════════════════════
+/* ═══════════════════════════
    STATE
-══════════════════════════════════ */
+═══════════════════════════ */
 const state = {
   currentStep: 1,
   vehicleType: 'Auto',
   safetyLevel: 'Low — Familiar route',
   alertTrigger: 'Missed check-in only',
   contacts: [],
-  duration: 30
+  coords: { from: null, to: null }
 };
 
-/* ══════════════════════════════════
+let leafletMap = null;
+let fromMarker = null, toMarker = null, routeLine = null;
+
+/* ═══════════════════════════
+   CONDITION 1: Auto-save / restore user
+═══════════════════════════ */
+const STORAGE_KEY = 'safeping_user_profile';
+
+function checkSavedUser() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved && saved.name && saved.phone) {
+      document.getElementById('sb-title').textContent = `Welcome back, ${saved.name.split(' ')[0]}!`;
+      document.getElementById('savedBanner').classList.add('show');
+    }
+  } catch(e) {}
+}
+
+function restoreSavedUser() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!saved) return;
+    if (saved.name)  document.getElementById('name').value  = saved.name;
+    if (saved.phone) document.getElementById('phone').value = saved.phone;
+    if (saved.email) document.getElementById('email').value = saved.email;
+    if (saved.age)   document.getElementById('age').value   = saved.age;
+    if (saved.notes) document.getElementById('notes').value = saved.notes;
+    dismissBanner();
+    showToast('Info restored!', `Filled in as ${saved.name}`);
+  } catch(e) {}
+}
+
+function saveUserProfile() {
+  try {
+    const profile = {
+      name:  document.getElementById('name').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      age:   document.getElementById('age').value.trim(),
+      notes: document.getElementById('notes').value.trim(),
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  } catch(e) {}
+}
+
+function dismissBanner() {
+  document.getElementById('savedBanner').classList.remove('show');
+}
+
+/* ═══════════════════════════
+   CONDITION 2: Place autocomplete using Nominatim
+═══════════════════════════ */
+const acTimers = {};
+
+function onLocInput(input, listId, markerKey) {
+  const query = input.value.trim();
+  const listEl = document.getElementById(listId);
+  clearTimeout(acTimers[listId]);
+
+  if (query.length < 3) { listEl.innerHTML = ''; return; }
+
+  acTimers[listId] = setTimeout(async () => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=6`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      const results = await res.json();
+      listEl.innerHTML = results.map(r => {
+        const parts = r.display_name.split(',');
+        const main = parts.slice(0, 2).join(',').trim();
+        const sub  = parts.slice(2, 5).join(',').trim();
+        return `<div class="ac-item"
+          onclick="selectPlace('${r.display_name.replace(/'/g,"\\'")}', ${r.lat}, ${r.lon}, '${markerKey}', '${input.id}', '${listId}')">
+          <span class="ac-pin">📍</span>
+          <div class="ac-text">
+            <div class="ac-main">${main}</div>
+            <div class="ac-sub">${sub}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) { listEl.innerHTML = ''; }
+  }, 350);
+}
+
+function selectPlace(name, lat, lon, markerKey, inputId, listId) {
+  document.getElementById(inputId).value = name;
+  document.getElementById(listId).innerHTML = '';
+  state.coords[markerKey] = [parseFloat(lat), parseFloat(lon)];
+  clearError(document.getElementById(inputId));
+  updateMap();
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.autocomplete-wrap')) {
+    document.querySelectorAll('.autocomplete-list').forEach(l => l.innerHTML = '');
+  }
+});
+
+/* ═══════════════════════════
+   CONDITION 4 & 5: Leaflet Map (realistic world map)
+═══════════════════════════ */
+function initMap() {
+  if (leafletMap) return;
+
+  leafletMap = L.map('journey-map', {
+    zoomControl: true,
+    scrollWheelZoom: false,
+    attributionControl: true
+  }).setView([20.5937, 78.9629], 5); // Default: India
+
+  // Condition 5: Use a realistic tile layer (CartoDB Positron with labels = clean, real-world style)
+  // Using OpenStreetMap standard tiles for maximum realism
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    maxZoom: 18
+  }).addTo(leafletMap);
+
+  // Pink custom marker icons
+  fromIcon = L.divIcon({
+    className: '',
+    html: `<div style="
+      background: linear-gradient(135deg,#FF6B8A,#8B3A62);
+      width:36px;height:36px;border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);border:3px solid white;
+      box-shadow:0 4px 16px rgba(255,107,138,0.5);
+    "></div>`,
+    iconSize: [36, 36], iconAnchor: [18, 36]
+  });
+
+  toIcon = L.divIcon({
+    className: '',
+    html: `<div style="
+      background: linear-gradient(135deg,#22c55e,#166534);
+      width:36px;height:36px;border-radius:50% 50% 50% 0;
+      transform:rotate(-45deg);border:3px solid white;
+      box-shadow:0 4px 16px rgba(34,197,94,0.5);
+    "></div>`,
+    iconSize: [36, 36], iconAnchor: [18, 36]
+  });
+}
+
+function updateMap() {
+  const { from, to } = state.coords;
+  if (!from && !to) return;
+
+  // Show map section
+  const section = document.getElementById('mapSection');
+  section.classList.add('show');
+
+  // Init map if needed
+  if (!leafletMap) {
+    initMap();
+  }
+  setTimeout(() => leafletMap.invalidateSize(), 50);
+
+  // Clear old markers/line
+  if (fromMarker) leafletMap.removeLayer(fromMarker);
+  if (toMarker)   leafletMap.removeLayer(toMarker);
+  if (routeLine)  leafletMap.removeLayer(routeLine);
+
+  const bounds = [];
+
+  if (from) {
+    fromMarker = L.marker(from, { icon: fromIcon })
+      .addTo(leafletMap)
+      .bindPopup(`<div class="map-popup-title">📍 Start</div><div class="map-popup-sub">${document.getElementById('currentLoc').value.split(',').slice(0,2).join(',')}</div>`);
+    bounds.push(from);
+  }
+
+  if (to) {
+    toMarker = L.marker(to, { icon: toIcon })
+      .addTo(leafletMap)
+      .bindPopup(`<div class="map-popup-title">🏁 Destination</div><div class="map-popup-sub">${document.getElementById('destination').value.split(',').slice(0,2).join(',')}</div>`);
+    bounds.push(to);
+  }
+
+  // Draw dashed route line between points
+  if (from && to) {
+    routeLine = L.polyline([from, to], {
+      color: '#FF6B8A',
+      weight: 3,
+      opacity: 0.8,
+      dashArray: '8, 10'
+    }).addTo(leafletMap);
+  }
+
+  if (bounds.length === 1) {
+    leafletMap.setView(bounds[0], 13);
+  } else if (bounds.length === 2) {
+    leafletMap.fitBounds(bounds, { padding: [50, 50] });
+  }
+}
+
+/* ═══════════════════════════
    NAVIGATION
-══════════════════════════════════ */
+═══════════════════════════ */
 function goToStep(step) {
   if (step > state.currentStep && !validateStep(state.currentStep)) return;
-
-  // Update state
+  if (state.currentStep === 1 && step > 1) saveUserProfile(); // auto-save on step advance
   state.currentStep = step;
 
-  // Hide all panels
   document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
 
   if (step === 'success') {
@@ -1042,10 +1222,18 @@ function goToStep(step) {
 
   document.getElementById('panel-' + step).classList.add('active');
   updateStepper(step);
-
   if (step === 4) populateReview();
 
-  // Scroll to form
+  // Init map when navigating to step 2
+  if (step === 2) {
+    setTimeout(() => {
+      if (!leafletMap && (state.coords.from || state.coords.to)) {
+        initMap();
+        updateMap();
+      }
+    }, 300);
+  }
+
   document.getElementById('formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -1058,25 +1246,21 @@ function updateStepper(activeStep, allDone = false) {
   });
 }
 
-/* ══════════════════════════════════
+/* ═══════════════════════════
    VALIDATION
-══════════════════════════════════ */
+═══════════════════════════ */
 function validateStep(step) {
   let valid = true;
-
   if (step === 1) {
-    if (!val('name')) { showError('name', 'name-err'); valid = false; }
-    if (!val('phone') || val('phone').length < 10) { showError('phone', 'phone-err'); valid = false; }
+    if (!val('name')) { showError('name','name-err'); valid = false; }
+    if (!val('phone') || val('phone').length < 10) { showError('phone','phone-err'); valid = false; }
   }
   if (step === 2) {
-    if (!val('currentLoc')) { showError('currentLoc', 'loc-err'); valid = false; }
-    if (!val('destination')) { showError('destination', 'dest-err'); valid = false; }
+    if (!val('currentLoc')) { showError('currentLoc','loc-err'); valid = false; }
+    if (!val('destination')) { showError('destination','dest-err'); valid = false; }
   }
   if (step === 3) {
-    if (state.contacts.length === 0) {
-      document.getElementById('contacts-err').classList.add('show');
-      valid = false;
-    }
+    if (state.contacts.length === 0) { document.getElementById('contacts-err').classList.add('show'); valid = false; }
   }
   return valid;
 }
@@ -1088,133 +1272,59 @@ function showError(inputId, errId) {
 }
 function clearError(input) {
   input.classList.remove('error');
-  const errId = input.id + '-err';
-  document.getElementById(errId)?.classList.remove('show');
+  document.getElementById(input.id + '-err')?.classList.remove('show');
 }
 
-/* ══════════════════════════════════
-   VEHICLE & SAFETY SELECTORS
-══════════════════════════════════ */
+/* ═══════════════════════════
+   SELECTORS
+═══════════════════════════ */
 function selectVehicle(el, type) {
   document.querySelectorAll('.v-option').forEach(v => v.classList.remove('selected'));
   el.classList.add('selected');
   state.vehicleType = type;
 }
-
 function selectSafety(el, level) {
   document.querySelectorAll('#safetyOpts .safety-opt').forEach(v => v.classList.remove('selected'));
   el.classList.add('selected');
   state.safetyLevel = level;
 }
-
 function selectAlert(el, trigger) {
   document.querySelectorAll('#alertOpts .safety-opt').forEach(v => v.classList.remove('selected'));
   el.classList.add('selected');
   state.alertTrigger = trigger;
 }
 
-/* ══════════════════════════════════
-   DURATION SLIDER
-══════════════════════════════════ */
-function updateDuration(val) {
-  state.duration = parseInt(val);
-  document.getElementById('durVal').textContent = val >= 60
-    ? (val/60).toFixed(val%60===0?0:1) + 'h'
-    : val + '';
-  document.getElementById('durVal').nextElementSibling.textContent = val >= 60 ? 'hours' : 'minutes';
-  // update slider fill
-  const pct = ((val - 5) / (240 - 5)) * 100;
-  document.getElementById('durSlider').style.background =
-    `linear-gradient(90deg, var(--blush) ${pct}%, #f0e0ea ${pct}%)`;
-  // deactivate presets
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  const presetMap = {15:'15m',30:'30m',60:'1hr',120:'2hr'};
-  document.querySelectorAll('.preset-btn').forEach(b => {
-    if (b.textContent === presetMap[val]) b.classList.add('active');
-  });
-}
-
-function setDuration(val, btn) {
-  document.getElementById('durSlider').value = val;
-  updateDuration(val);
-  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-// Init slider fill
-updateDuration(30);
-
-/* ══════════════════════════════════
-   CONTACTS
-══════════════════════════════════ */
-function addContact() {
-  const input = document.getElementById('contactInput');
-  const text = input.value.trim();
-  if (!text) return;
-  if (state.contacts.length >= 5) { showToast('Max 5 contacts allowed', '', true); return; }
-  if (state.contacts.includes(text)) { showToast('Already added!', ''); input.value = ''; return; }
-
-  state.contacts.push(text);
-  renderContactTags();
-  input.value = '';
-  document.getElementById('contacts-err').classList.remove('show');
-  showToast('Contact added', text + ' will be alerted if needed');
-}
-
-function addSuggested(name) {
-  document.getElementById('contactInput').value = name;
-  addContact();
-}
-
-function removeContact(name) {
-  state.contacts = state.contacts.filter(c => c !== name);
-  renderContactTags();
-}
-
-function contactKeydown(e) { if (e.key === 'Enter') { e.preventDefault(); addContact(); } }
-
-function renderContactTags() {
-  const container = document.getElementById('contactTags');
-  container.innerHTML = state.contacts.map(c => `
-    <div class="contact-tag">
-      <div class="tag-avatar">${c[0].toUpperCase()}</div>
-      ${c}
-      <button class="tag-remove" onclick="removeContact('${c.replace(/'/g,"\\'")}')">✕</button>
-    </div>
-  `).join('');
-}
-
-/* ══════════════════════════════════
+/* ═══════════════════════════
    GEOLOCATION
-══════════════════════════════════ */
+═══════════════════════════ */
 function detectLocation() {
   const btn = event.currentTarget;
   btn.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 0.8s linear infinite"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg> Detecting…';
   btn.disabled = true;
 
-  if (!navigator.geolocation) {
-    fallbackLocation(btn);
-    return;
-  }
+  if (!navigator.geolocation) { fallbackLocation(btn); return; }
 
   navigator.geolocation.getCurrentPosition(
     pos => {
       const { latitude, longitude } = pos.coords;
-      // Reverse geocode using nominatim (free)
       fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`)
         .then(r => r.json())
         .then(data => {
           const addr = data.display_name?.split(',').slice(0,3).join(', ') || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
           document.getElementById('currentLoc').value = addr;
+          state.coords.from = [latitude, longitude];
           clearError(document.getElementById('currentLoc'));
+          updateMap();
           btn.innerHTML = '✓ Detected';
           btn.style.color = 'var(--green)';
-          showToast('Location detected!', addr);
-          setTimeout(() => resetBtn(btn), 2500);
+          showToast('Location detected!', addr.split(',')[0]);
+          setTimeout(() => resetDetectBtn(btn), 2500);
         })
         .catch(() => {
           document.getElementById('currentLoc').value = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-          btn.innerHTML = '✓ Done'; setTimeout(() => resetBtn(btn), 2000);
+          state.coords.from = [latitude, longitude];
+          updateMap();
+          resetDetectBtn(btn);
         });
     },
     () => fallbackLocation(btn)
@@ -1222,28 +1332,49 @@ function detectLocation() {
 }
 
 function fallbackLocation(btn) {
-  document.getElementById('currentLoc').value = 'Current GPS Location';
   showToast('Location permission needed', 'Please enter manually or allow access', true);
-  resetBtn(btn);
+  resetDetectBtn(btn);
 }
 
-function resetBtn(btn) {
+function resetDetectBtn(btn) {
   btn.disabled = false;
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Detect';
   btn.style.color = '';
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg> Detect`;
 }
 
-/* ══════════════════════════════════
-   REVIEW POPULATION
-══════════════════════════════════ */
-function populateReview() {
-  const dur = state.duration >= 60
-    ? (state.duration/60).toFixed(state.duration%60===0?0:1) + ' hour(s)'
-    : state.duration + ' minutes';
+/* ═══════════════════════════
+   CONTACTS
+═══════════════════════════ */
+function addContact() {
+  const input = document.getElementById('contactInput');
+  const text = input.value.trim();
+  if (!text) return;
+  if (state.contacts.length >= 5) { showToast('Max 5 contacts allowed','',true); return; }
+  if (state.contacts.includes(text)) { showToast('Already added!',''); input.value=''; return; }
+  state.contacts.push(text);
+  renderContactTags();
+  input.value = '';
+  document.getElementById('contacts-err').classList.remove('show');
+  showToast('Contact added', text + ' will be alerted if needed');
+}
+function addSuggested(name) { document.getElementById('contactInput').value = name; addContact(); }
+function removeContact(name) { state.contacts = state.contacts.filter(c => c !== name); renderContactTags(); }
+function contactKeydown(e) { if (e.key === 'Enter') { e.preventDefault(); addContact(); } }
+function renderContactTags() {
+  document.getElementById('contactTags').innerHTML = state.contacts.map(c => `
+    <div class="contact-tag">
+      <div class="tag-avatar">${c[0].toUpperCase()}</div>
+      ${c}
+      <button class="tag-remove" onclick="removeContact('${c.replace(/'/g,"\\'")}')">✕</button>
+    </div>`).join('');
+}
 
+/* ═══════════════════════════
+   REVIEW
+═══════════════════════════ */
+function populateReview() {
   document.getElementById('rv-from').textContent    = val('currentLoc') || '—';
   document.getElementById('rv-to').textContent      = val('destination') || '—';
-  document.getElementById('rv-dur').textContent     = dur;
   document.getElementById('rv-vehicle').textContent = state.vehicleType;
   document.getElementById('rv-risk').textContent    = state.safetyLevel.split('—')[0].trim();
   document.getElementById('rv-name').textContent    = val('name') || '—';
@@ -1252,28 +1383,25 @@ function populateReview() {
   document.getElementById('rv-driver').textContent  = val('driverName') || 'Not specified';
   document.getElementById('rv-alert-config').textContent = state.alertTrigger;
 
-  const rvContacts = document.getElementById('rv-contacts');
-  rvContacts.innerHTML = state.contacts.map(c => `
+  document.getElementById('rv-contacts').innerHTML = state.contacts.map(c => `
     <div class="contact-tag">
       <div class="tag-avatar">${c[0].toUpperCase()}</div>${c}
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-/* ══════════════════════════════════
-   SUBMIT (simulated backend call)
-══════════════════════════════════ */
+/* ═══════════════════════════
+   SUBMIT
+═══════════════════════════ */
 async function submitJourney() {
   const btn = document.getElementById('submitBtn');
   btn.classList.add('loading');
   btn.disabled = true;
 
-  // Build payload
   const payload = {
     traveller: { name: val('name'), phone: val('phone'), email: val('email'), age: val('age'), notes: val('notes') },
     journey: {
       from: val('currentLoc'), to: val('destination'),
-      duration: state.duration, vehicleType: state.vehicleType,
+      vehicleType: state.vehicleType,
       vehicleNumber: val('vehicleNum'), driverName: val('driverName'),
       riskLevel: state.safetyLevel
     },
@@ -1283,71 +1411,43 @@ async function submitJourney() {
     timestamp: new Date().toISOString()
   };
 
-  // Simulated API call
+  // Auto-save profile on submit too
+  saveUserProfile();
+
   try {
     await simulateBackend(payload);
     const journeyId = 'SP-' + Math.random().toString(36).substr(2,6).toUpperCase();
-    sessionStorage.setItem('safeping_journey', JSON.stringify({ ...payload, journeyId }));
+    try { sessionStorage.setItem('safeping_journey', JSON.stringify({ ...payload, journeyId })); } catch(e) {}
     showSuccess(payload, journeyId);
-  } catch (err) {
-    showToast('Something went wrong', 'Please try again', true);
+  } catch(err) {
+    showToast('Something went wrong','Please try again',true);
     btn.classList.remove('loading');
     btn.disabled = false;
   }
 }
 
 function simulateBackend(payload) {
-  // Simulate API latency and log to console
   console.log('SafePing API payload:', JSON.stringify(payload, null, 2));
   return new Promise(resolve => setTimeout(resolve, 1800));
 }
 
 function showSuccess(payload, journeyId) {
-  const dur = payload.journey.duration >= 60
-    ? (payload.journey.duration/60).toFixed(payload.journey.duration%60===0?0:1) + ' hr'
-    : payload.journey.duration + ' min';
-
   document.getElementById('sd-name').textContent    = payload.traveller.name;
-  document.getElementById('sd-route').textContent   = `${payload.journey.from} → ${payload.journey.to}`;
-  document.getElementById('sd-timer').textContent   = dur + ' check-in window';
+  document.getElementById('sd-route').textContent   = `${payload.journey.from.split(',')[0]} → ${payload.journey.to.split(',')[0]}`;
   document.getElementById('sd-vehicle').textContent = `${payload.journey.vehicleType}${payload.journey.vehicleNumber ? ' · ' + payload.journey.vehicleNumber : ''}`;
   document.getElementById('sd-jid').textContent     = journeyId;
 
-  const notifyList = document.getElementById('notifyList');
-  notifyList.innerHTML = payload.contacts.map(c => `
-    <div class="notify-badge">
-      <div class="nb-dot"></div>${c}
-    </div>
-  `).join('');
+  document.getElementById('notifyList').innerHTML = payload.contacts.map(c => `
+    <div class="notify-badge"><div class="nb-dot"></div>${c}</div>`).join('');
 
   goToStep('success');
-  showToast('🛡️ Journey started!', 'SafePing is now protecting you');
-
-  // Start countdown simulation
-  startCountdown(payload.journey.duration);
+  showToast('🛡️ Journey started!','SafePing is now protecting you');
 }
 
-/* ══════════════════════════════════
-   COUNTDOWN SIMULATION
-══════════════════════════════════ */
-let countdownInterval;
-function startCountdown(minutes) {
-  let secs = minutes * 60;
-  const li = document.querySelector('.live-indicator');
-
-  clearInterval(countdownInterval);
-  countdownInterval = setInterval(() => {
-    secs--;
-    const m = Math.floor(secs/60), s = secs % 60;
-    li.innerHTML = `<div class="li-dot"></div> ${m}:${s.toString().padStart(2,'0')} remaining`;
-    if (secs <= 0) { clearInterval(countdownInterval); li.innerHTML = '⚠️ Alert Sent!'; }
-  }, 1000);
-}
-
-/* ══════════════════════════════════
-   TOAST SYSTEM
-══════════════════════════════════ */
-function showToast(title, sub = '', isError = false) {
+/* ═══════════════════════════
+   TOAST
+═══════════════════════════ */
+function showToast(title, sub='', isError=false) {
   const wrap = document.getElementById('toastWrap');
   const toast = document.createElement('div');
   toast.className = 'toast' + (isError ? ' error' : '');
@@ -1356,46 +1456,36 @@ function showToast(title, sub = '', isError = false) {
     <div class="toast-text">
       <div class="toast-title">${title}</div>
       ${sub ? `<div class="toast-sub">${sub}</div>` : ''}
-    </div>
-  `;
+    </div>`;
   wrap.appendChild(toast);
-  requestAnimationFrame(() => { requestAnimationFrame(() => { toast.classList.add('show'); }); });
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 400);
-  }, 3200);
+  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+  setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3200);
 }
 
-/* ══════════════════════════════════
-   POST-SUCCESS ACTIONS
-══════════════════════════════════ */
-function showDashboard() {
-  showToast('Dashboard', 'Live tracking view coming soon!');
-}
+/* ═══════════════════════════
+   POST-SUCCESS
+═══════════════════════════ */
+function showDashboard() { showToast('Dashboard','Live tracking view coming soon!'); }
 
 function shareJourney() {
-  const data = JSON.parse(sessionStorage.getItem('safeping_journey') || '{}');
-  const text = `🛡️ I've started a SafePing journey!\nRoute: ${data.journey?.from} → ${data.journey?.to}\nJourney ID: ${data.journeyId}\nTrack via SafePing app.`;
-  if (navigator.share) {
-    navigator.share({ title: 'My SafePing Journey', text })
-      .catch(() => copyToClipboard(text));
-  } else copyToClipboard(text);
+  try {
+    const data = JSON.parse(sessionStorage.getItem('safeping_journey') || '{}');
+    const text = `🛡️ I've started a SafePing journey!\nRoute: ${data.journey?.from?.split(',')[0]} → ${data.journey?.to?.split(',')[0]}\nJourney ID: ${data.journeyId}\nTrack via SafePing app.`;
+    if (navigator.share) {
+      navigator.share({ title: 'My SafePing Journey', text }).catch(() => copyToClipboard(text));
+    } else copyToClipboard(text);
+  } catch(e) { showToast('Copied link to clipboard',''); }
 }
 
 function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard!', 'Paste and share anywhere'));
+  navigator.clipboard?.writeText(text).then(() => showToast('Copied to clipboard!','Paste and share anywhere'));
 }
 
-/* ══════════════════════════════════
-   SCROLL REVEAL
-══════════════════════════════════ */
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
-}, { threshold: 0.05 });
-
-// Add reveal class & observe info cards
-document.querySelectorAll('.info-card').forEach((el, i) => {
-  el.style.animationDelay = (0.5 + i * 0.15) + 's';
+/* ═══════════════════════════
+   INIT
+═══════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  checkSavedUser();     // Condition 1: check for saved user
 });
 </script>
 </body>
