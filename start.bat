@@ -1,6 +1,0 @@
-@echo off
-echo Installing dependencies for SafePing Backend...
-call npm install
-echo Starting SafePing backend...
-node server.js
-pause
