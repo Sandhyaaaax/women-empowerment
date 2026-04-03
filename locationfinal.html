@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SafePing — Live Location Tracking</title>
+<title>HerShield — Live Location Tracking</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -122,7 +122,7 @@ nav{
 .ls-btn:hover:not(.active){background:rgba(255,107,138,0.08);color:var(--plum);}
 
 /* Custom markers */
-.safeping-marker{position:relative;}
+.HerShield-marker{position:relative;}
 .marker-pulse-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,107,138,0.6);
   animation:markerPulse 2s ease-out infinite;}
@@ -416,7 +416,7 @@ nav{
 <div id="permission-screen">
   <div class="perm-icon">📍</div>
   <h1 class="perm-title">Enable <em>Live</em> Tracking</h1>
-  <p class="perm-desc">SafePing needs access to your location to monitor your journey and alert your trusted contacts if you don't check in.</p>
+  <p class="perm-desc">HerShield needs access to your location to monitor your journey and alert your trusted contacts if you don't check in.</p>
   <button class="btn-allow" onclick="requestLocationPermission()">📍 Allow Location Access</button>
   <button class="btn-demo" onclick="startDemoMode()">Try Demo Mode (Simulated GPS)</button>
   <p style="font-size:0.7rem;color:rgba(192,107,138,0.5);margin-top:8px;">Your location is end-to-end encrypted. Never shared without your permission.</p>
@@ -952,7 +952,7 @@ function togglePoliceLayer() {
 /* ═══════════════ JOURNEY DATA ═══════════════ */
 function loadJourneyData() {
   try {
-    const raw = sessionStorage.getItem('safeping_journey');
+    const raw = sessionStorage.getItem('HerShield_journey');
     if (raw) {
       APP.journey = JSON.parse(raw);
       APP.contacts = APP.journey.contacts || [];
@@ -992,7 +992,7 @@ async function initApp(lat, lng, isDemo) {
   initMap(lat, lng);
   startTimer();
   renderContacts();
-  addActivity('green', '🛡️', 'SafePing journey started', 'Just now');
+  addActivity('green', '🛡️', 'HerShield journey started', 'Just now');
   addActivity('blue', '📍', `Tracking from ${APP.journey.journey?.from || 'your location'}`, 'Just now');
 
   document.getElementById('nav-jid').textContent = APP.journey.journeyId || 'SP-DEMO1';
@@ -1032,7 +1032,7 @@ function initMap(lat, lng) {
 
   const userIcon = L.divIcon({
     className: '',
-    html: `<div class="safeping-marker" style="position:relative;width:22px;height:22px;">
+    html: `<div class="HerShield-marker" style="position:relative;width:22px;height:22px;">
       <div class="marker-pulse-ring"></div>
       <div class="marker-pulse-ring-2"></div>
       <div class="marker-dot"></div>
@@ -1191,8 +1191,8 @@ function toggleRoute() {
 }
 function shareLocation() {
   const pos=APP.currentPos; if(!pos) return;
-  const text=`📍 SafePing Live Location\n${APP.journey?.traveller?.name||'Traveller'} is here:\nhttps://maps.google.com/?q=${pos.lat},${pos.lng}\nJourney ID: ${APP.journey?.journeyId||'SP-DEMO1'}`;
-  if(navigator.share) navigator.share({title:'SafePing Live Location',text}).catch(()=>copyText(text));
+  const text=`📍 HerShield Live Location\n${APP.journey?.traveller?.name||'Traveller'} is here:\nhttps://maps.google.com/?q=${pos.lat},${pos.lng}\nJourney ID: ${APP.journey?.journeyId||'SP-DEMO1'}`;
+  if(navigator.share) navigator.share({title:'HerShield Live Location',text}).catch(()=>copyText(text));
   else copyText(text);
 }
 function copyText(text) { navigator.clipboard.writeText(text).then(()=>showToast('📤 Location copied!','Share the link with anyone')); }

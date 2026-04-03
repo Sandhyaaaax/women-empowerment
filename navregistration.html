@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SafePing — Start Safe Journey</title>
+<title>Hershield — Start Safe Journey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;0,900;1,300;1,700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -571,8 +571,8 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 <nav>
   <div class="nav-inner">
     <a class="logo" href="index.html">
-      <div class="logo-mark">🛡️</div>
-      Safe<span class="hi">Ping</span>
+      <div class="logo-mark">❤️</div>
+      Her<span class="hi">Shield</span>
     </a>
     <a class="nav-back" href="index.html">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -589,7 +589,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 <div class="bg-blob blob2"></div>
 
 <!-- LIVE INDICATOR -->
-<div class="live-indicator"><div class="li-dot"></div> SafePing Active</div>
+<div class="live-indicator"><div class="li-dot"></div> HerShield Active</div>
 
 <main>
   <div class="page-wrap">
@@ -598,7 +598,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
     <div class="page-header">
       <div class="header-pill"><div class="header-dot"></div> New Journey Registration</div>
       <h1>Start Your <em>Safe</em><br>Journey</h1>
-      <p>Fill in your trip details and SafePing will silently protect you — alerting your trusted contacts if anything feels wrong.</p>
+      <p>Fill in your trip details and HerShield will silently protect you — alerting your trusted contacts if anything feels wrong.</p>
     </div>
 
     <!-- STEPPER -->
@@ -798,7 +798,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
             <div class="panel-icon">👥</div>
             <div class="panel-title">
               <h2>Trusted Contacts</h2>
-              <p>Who should SafePing alert if something goes wrong?</p>
+              <p>Who should HerShield alert if something goes wrong?</p>
             </div>
           </div>
           <div class="panel-body">
@@ -828,7 +828,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 
               <div class="form-group field-full">
                 <label class="form-label">Alert Message to Contacts</label>
-                <textarea class="form-textarea" id="alertMsg" placeholder="This message will be sent to your contacts if SafePing triggers an alert…" rows="3">🚨 [Name] started a SafePing journey and hasn't checked in. Last known location: [GPS]. Please try reaching them immediately.</textarea>
+                <textarea class="form-textarea" id="alertMsg" placeholder="This message will be sent to your contacts if HerShield triggers an alert…" rows="3">🚨 [Name] started a HerShield journey and hasn't checked in. Last known location: [GPS]. Please try reaching them immediately.</textarea>
                 <span class="field-hint">You can customize this message. [Name] and [GPS] will be filled in automatically.</span>
               </div>
 
@@ -863,7 +863,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
             <div class="panel-icon">✅</div>
             <div class="panel-title">
               <h2>Review & Launch</h2>
-              <p>Double-check everything before SafePing starts protecting you.</p>
+              <p>Double-check everything before HerShield starts protecting you.</p>
             </div>
           </div>
           <div class="panel-body">
@@ -939,7 +939,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
           <div class="success-panel">
             <div class="success-icon">🛡️</div>
             <h2>You're <em>Protected!</em></h2>
-            <p>SafePing is now monitoring your journey. Your trusted contacts will be alerted automatically if you don't check in on time.</p>
+            <p>HerShield is now monitoring your journey. Your trusted contacts will be alerted automatically if you don't check in on time.</p>
 
             <div class="success-details" id="successDetails">
               <div class="sd-row"><span class="sd-label">Traveller</span><span class="sd-val" id="sd-name">—</span></div>
@@ -970,7 +970,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
             <span class="ic-title">How It Works</span>
           </div>
           <div class="ic-body">
-            Once you start, SafePing silently runs in the background. If you don't tap "I'm Safe" before your timer ends, your contacts are automatically alerted — no action needed from you.
+            Once you start, HerShield silently runs in the background. If you don't tap "I'm Safe" before your timer ends, your contacts are automatically alerted — no action needed from you.
           </div>
         </div>
 
@@ -978,7 +978,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
           <div class="ic-stat">50K+</div>
           <div class="ic-stat-label">Women protected this month</div>
           <div style="height:1px;background:rgba(255,107,138,0.1);margin:10px 0;"></div>
-          <div class="ic-body">Join thousands of women who travel safer every day with SafePing.</div>
+          <div class="ic-body">Join thousands of women who travel safer every day with HerShield.</div>
         </div>
 
         <div class="info-card">
@@ -987,7 +987,7 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
             <span class="ic-title">Privacy First</span>
           </div>
           <div class="ic-body">
-            Your location is end-to-end encrypted. We never sell, analyze, or share your data. SafePing sees nothing — only your emergency contacts do, and only when needed.
+            Your location is end-to-end encrypted. We never sell, analyze, or share your data. HerShield sees nothing — only your emergency contacts do, and only when needed.
           </div>
         </div>
 
@@ -1287,7 +1287,7 @@ async function submitJourney() {
   try {
     await simulateBackend(payload);
     const journeyId = 'SP-' + Math.random().toString(36).substr(2,6).toUpperCase();
-    sessionStorage.setItem('safeping_journey', JSON.stringify({ ...payload, journeyId }));
+    sessionStorage.setItem('HerShield_journey', JSON.stringify({ ...payload, journeyId }));
     showSuccess(payload, journeyId);
   } catch (err) {
     showToast('Something went wrong', 'Please try again', true);
@@ -1298,7 +1298,7 @@ async function submitJourney() {
 
 function simulateBackend(payload) {
   // Simulate API latency and log to console
-  console.log('SafePing API payload:', JSON.stringify(payload, null, 2));
+  console.log('HerShield API payload:', JSON.stringify(payload, null, 2));
   return new Promise(resolve => setTimeout(resolve, 1800));
 }
 
@@ -1321,7 +1321,7 @@ function showSuccess(payload, journeyId) {
   `).join('');
 
   goToStep('success');
-  showToast('🛡️ Journey started!', 'SafePing is now protecting you');
+  showToast('🛡️ Journey started!', 'HerShield is now protecting you');
 
   // Start countdown simulation
   startCountdown(payload.journey.duration);
@@ -1374,10 +1374,10 @@ function showDashboard() {
 }
 
 function shareJourney() {
-  const data = JSON.parse(sessionStorage.getItem('safeping_journey') || '{}');
-  const text = `🛡️ I've started a SafePing journey!\nRoute: ${data.journey?.from} → ${data.journey?.to}\nJourney ID: ${data.journeyId}\nTrack via SafePing app.`;
+  const data = JSON.parse(sessionStorage.getItem('HerShield_journey') || '{}');
+  const text = `🛡️ I've started a HerShield journey!\nRoute: ${data.journey?.from} → ${data.journey?.to}\nJourney ID: ${data.journeyId}\nTrack via HerShield app.`;
   if (navigator.share) {
-    navigator.share({ title: 'My SafePing Journey', text })
+    navigator.share({ title: 'My HerShield Journey', text })
       .catch(() => copyToClipboard(text));
   } else copyToClipboard(text);
 }
