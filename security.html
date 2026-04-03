@@ -1013,8 +1013,13 @@ async function verifyOTP() {
   const code = ['o1','o2','o3','o4','o5','o6'].map(id => document.getElementById(id).value).join('');
   if (code.length < 6) { alert('Please enter the complete 6-digit OTP.'); return; }
   
-  const phone = document.getElementById('phone-input').value;
+  const ph = document.getElementById('phone-input').value.trim();
+  const sel = document.querySelector('.country-select').value;
+  const phone = sel + ph;
   const email = sessionStorage.getItem('sp_email');
+
+  const btn = document.querySelector('#otp-step-code .btn-verify');
+  if (btn) { btn.disabled = true; btn.textContent = 'Verifying...'; }
 
   try {
     const res = await fetch('/api/auth/verify-otp', {
@@ -1031,9 +1036,11 @@ async function verifyOTP() {
       }
     } else {
       alert(data.message || 'OTP Verification failed');
+      if (btn) { btn.disabled = false; btn.textContent = 'Verify & Enter SafePing →'; }
     }
   } catch (err) {
     alert('Network error verifying OTP.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Verify & Enter SafePing →'; }
   }
 }
 

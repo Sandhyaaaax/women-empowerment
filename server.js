@@ -41,8 +41,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static frontend files from 'public' directory
-const publicDir = path.join(__dirname, '..', 'public');
+// Serve static frontend files from the current directory
+const publicDir = __dirname;
 app.use(express.static(publicDir));
 
 // --- API Routes ---
@@ -125,6 +125,9 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
 app.post('/api/auth/verify-otp', async (req, res) => {
     const { phone, otp, email } = req.body;
+    console.log(`[VERIFY-OTP] Received phone: "${phone}", otp: "${otp}", email: "${email}"`);
+    console.log(`[VERIFY-OTP] Current OTPs dictionary keys:`, Object.keys(otps));
+    if (otps[phone]) console.log(`[VERIFY-OTP] Expected OTP object for this phone is:`, otps[phone]);
 
     if (!otp || otp.length < 6) return res.status(400).json({ success: false, message: 'Invalid OTP format.' });
     if (!otps[phone] || otps[phone].otp !== otp) {
