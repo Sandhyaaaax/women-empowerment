@@ -168,6 +168,19 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(publicDir, 'index.html'));
 });
 
+const express = require('express');
+const router = express.Router();
+const profileController = require('../controllers/profileController');
+
+// GET /api/profile?email=...
+router.get('/', profileController.getProfile);
+
+// PUT /api/profile
+router.put('/', profileController.updateProfile);
+
+module.exports = router;
+
+
 // Start Server
 app.listen(PORT, () => {
     console.log(`🚀 SafePing server running on http://localhost:${PORT}`);
